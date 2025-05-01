@@ -7,5 +7,19 @@
       "password": "123124421"
     }
   ],
-  "posts": []
+  "posts": [
+  {
+    "id": 1,
+    "title": "첫 번째 게시글",
+    "body": "내용입니다.",
+    "author": "홍길동"
+  },
+  {
+    "id": 2,
+    "title": "두 번째 게시글",
+    "body": "React + Zustand + json-server!",
+    "author": "이몽룡"
+  }
+]
+
 }
