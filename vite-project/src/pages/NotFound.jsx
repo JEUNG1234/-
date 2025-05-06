@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { Container, Button, Input, Textarea } from '../components/CommonStyles';
+import { Container, PrimaryButton } from '../components/CommonStyles'; // 수정: Button -> PrimaryButton
 
 const Wrapper = styled.div`
   display: flex;

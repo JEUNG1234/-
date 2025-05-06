@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { Container, PrimaryButton } from '../components/CommonStyles';
-import { PageWrapper} from "../components/CommonStyles";
+import { PageWrapper, PageInner } from "../components/PageLayout"; // 수정
 
 const PostItem = styled.li`
   border-bottom: 1px solid #ddd;
@@ -45,7 +45,7 @@ const BoardList = () => {
 
   const fetchPosts = async () => {
     const res = await axios.get('http://localhost:3001/posts');
-    setPosts(res.data.reverse()); // 최신순 정렬
+    setPosts(res.data.reverse());
   };
 
   useEffect(() => {
@@ -53,8 +53,8 @@ const BoardList = () => {
   }, []);
 
   return (
-    <PageWrapper>
-      <PageInner>
+    <PageWrapper> {/* 수정 */}
+      <PageInner>   {/* 수정 */}
         <Container>
           <HeaderGroup>
             <Title>게시판</Title>
@@ -72,7 +72,7 @@ const BoardList = () => {
             ))}
           </ul>
         </Container>
-      </PageInner>
+      </PageInner>  
     </PageWrapper>
   );
 };

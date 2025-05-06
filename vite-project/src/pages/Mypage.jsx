@@ -1,3 +1,5 @@
+// src/pages/Mypage.jsx
+
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
@@ -5,14 +7,16 @@ import { toast } from 'react-toastify';
 import useUserStore from '../store/useUserStore';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Container, Input } from '../components/CommonStyles';
- import { PrimaryButton } from '../components/CommonStyles';
+
+// PageLayout 컴포넌트 import
+import { PageWrapper, PageInner } from '../components/PageLayout';
+// CommonStyles 컴포넌트 import
+import { Container, Input, PrimaryButton } from '../components/CommonStyles';
 
 const Title = styled.h2`
   margin-bottom: 1.5rem;
   text-align: center;
 `;
-
 
 const Divider = styled.hr`
   margin: 2.5rem 0;
@@ -60,13 +64,14 @@ const Mypage = () => {
     setForm({
       name: user.name,
       email: user.email,
-      password: user.password,
+      password: user.password, // 실제 애플리케이션에서는 비밀번호를 이렇게 직접 다루는 것은 보안상 좋지 않습니다.
     });
 
     fetchUserPosts();
   }, [user, navigate]);
 
   const fetchUserPosts = async () => {
+    if (!user) return; // user가 없을 경우를 대비
     try {
       const res = await axios.get(`http://localhost:3001/posts?author=${user.name}`);
       setUserPosts(res.data);
@@ -92,37 +97,49 @@ const Mypage = () => {
     }
   };
 
+  if (!user) { // user가 없을 경우 로딩 상태나 리다이렉션 처리를 명시적으로 하는 것이 좋습니다.
+    return null; // 또는 <p>Loading...</p> 등
+  }
+
   return (
-    <Container>
-      <Title>내 정보</Title>
-      <Input name="name" value={form.name} onChange={handleChange} placeholder="이름" />
-      <Input name="email" value={form.email} onChange={handleChange} placeholder="이메일" />
-      <Input
-        name="password"
-        type="password"
-        value={form.password}
-        onChange={handleChange}
-        placeholder="비밀번호"
-      />
-      <PrimaryButton onClick={handleUpdate}>정보 수정</PrimaryButton>
+    <PageWrapper> {/* 최상위를 PageWrapper로 감싸줍니다. */}
+      <PageInner>   {/* 그 안에 PageInner를 사용합니다. */}
+        <Container> {/* 페이지의 실제 콘텐츠를 Container로 감싸줍니다. */}
+          <Title>내 정보</Title>
+          <Input name="name" value={form.name} onChange={handleChange} placeholder="이름" />
+          <Input name="email" value={form.email} onChange={handleChange} placeholder="이메일" />
+          <Input
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            placeholder="비밀번호"
+          />
+          <PrimaryButton onClick={handleUpdate}>정보 수정</PrimaryButton>
 
-      <Divider />
+          <Divider />
 
-      <Title>내가 쓴 글</Title>
-      <PostList>
-        {userPosts.map((item) => (
-          <PostItem key={item.id}>
-            <PostTitle>{item.title}</PostTitle>
-            <PostBody>{item.body}</PostBody>
-            <PostDate>
-              {item.createdAt && !isNaN(Date.parse(item.createdAt))
-                ? format(new Date(item.createdAt), 'yyyy-MM-dd HH:mm')
-                : '날짜 없음'}
-            </PostDate>
-          </PostItem>
-        ))}
-      </PostList>
-    </Container>
+          <Title>내가 쓴 글</Title>
+          <PostList>
+            {userPosts.length > 0 ? (
+              userPosts.map((item) => (
+                <PostItem key={item.id}>
+                  <PostTitle>{item.title}</PostTitle>
+                  <PostBody>{item.body}</PostBody>
+                  <PostDate>
+                    {item.createdAt && !isNaN(Date.parse(item.createdAt))
+                      ? format(new Date(item.createdAt), 'yyyy-MM-dd HH:mm')
+                      : '날짜 없음'}
+                  </PostDate>
+                </PostItem>
+              ))
+            ) : (
+              <p>작성한 글이 없습니다.</p>
+            )}
+          </PostList>
+        </Container>
+      </PageInner>
+    </PageWrapper>
   );
 };
 

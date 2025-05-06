@@ -36,11 +36,71 @@
       "createdAt": "2025-05-06T20:19:38.880Z"
     },
     {
-      "id": "64c7",
-      "title": "ㅊㄴ",
-      "body": "ㅊㄴ",
+      "id": "61fb",
+      "title": "ㄹㄷ",
+      "body": "ㄹㄷ",
       "author": "ㅇㄴㅁ",
-      "createdAt": "2025-05-06T20:21:42.501Z"
+      "createdAt": "2025-05-06T21:36:21.508Z"
+    }
+  ],
+  "polls": [
+    {
+      "id": "1",
+      "title": "가장 좋아하는 계절은?",
+      "options": [
+        {
+          "id": "opt1",
+          "text": "봄",
+          "votes": 0
+        },
+        {
+          "id": "opt2",
+          "text": "여름",
+          "votes": 0
+        },
+        {
+          "id": "opt3",
+          "text": "가을",
+          "votes": 0
+        },
+        {
+          "id": "opt4",
+          "text": "겨울",
+          "votes": 1
+        }
+      ],
+      "createdAt": "2025-05-08T10:00:00Z",
+      "author": "운영자",
+      "totalVotes": 1
+    },
+    {
+      "id": "2",
+      "title": "선호하는 프로그래밍 언어는?",
+      "options": [
+        {
+          "id": "opt1",
+          "text": "JavaScript",
+          "votes": 0
+        },
+        {
+          "id": "opt2",
+          "text": "Python",
+          "votes": 0
+        },
+        {
+          "id": "opt3",
+          "text": "Java",
+          "votes": 1
+        },
+        {
+          "id": "opt4",
+          "text": "C#",
+          "votes": 0
+        }
+      ],
+      "createdAt": "2025-05-09T11:30:00Z",
+      "author": "개발팀",
+      "totalVotes": 1
     }
   ]
 }

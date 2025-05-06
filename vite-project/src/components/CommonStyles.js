@@ -1,15 +1,4 @@
-// src/components/CommonStyles.js
 import styled from "styled-components";
-
-// 레이아웃을 감싸는 최상위 Wrapper
-export const PageWrapper = styled.div`
-  min-height: 100vh;
-  background-color: #f5f6f8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-`;
 
 // 내용 컨테이너 (카드 스타일)
 export const Container = styled.div`
@@ -19,6 +8,7 @@ export const Container = styled.div`
   padding: 2rem;
   width: 100%;
   max-width: 1024px;
+  margin: 0 auto; /* << 이 줄을 추가하거나 수정하세요 */
 `;
 
 // 입력 필드
@@ -73,4 +63,3 @@ export const SuccessButton = styled(BaseButton)`
   background-color: #2ecc71;
   color: white;
 `;
-

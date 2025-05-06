@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Container, Button, Input, Textarea } from '../components/CommonStyles';
-
+// 'Button' import 제거
+import { Container, Input, Textarea } from '../components/CommonStyles';
 
 const Header = styled.h2`
   text-align: center;

@@ -4,15 +4,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import useUserStore from '../store/useUserStore';
-import { Container, Button, Input, Textarea } from '../components/CommonStyles';
-import { PrimaryButton } from '../components/CommonStyles';
+// 'Button' import를 제거하고, 'PrimaryButton'을 다른 컴포넌트들과 함께 한 줄로 import
+import { Container, Input, Textarea, PrimaryButton } from '../components/CommonStyles';
 
 const Title = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
 `;
-
-
 
 const BoardEdit = () => {
   const { id } = useParams();
@@ -76,8 +74,7 @@ const BoardEdit = () => {
         onChange={handleChange}
         placeholder="내용을 입력하세요"
       />
-     
-<PrimaryButton onClick={handleUpdate}>수정 완료</PrimaryButton>
+      <PrimaryButton onClick={handleUpdate}>수정 완료</PrimaryButton>
     </Container>
   );
 };

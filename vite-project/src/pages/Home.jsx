@@ -1,7 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { PrimaryButton } from '../components/CommonStyles'; // 추가
+import { PrimaryButton } from '../components/CommonStyles';
+import { PageWrapper, PageInner } from '../components/PageLayout'; // 추가
 
 const Wrapper = styled.div`
   display: flex;
@@ -38,16 +39,20 @@ const NavButton = styled(PrimaryButton).attrs({ as: Link })`
 
 const Home = () => {
   return (
-    <Wrapper>
-      <Title>나만의 리액트 홈페이지</Title>
-      <Description>
-        게시판, 회원가입, 마이페이지 기능이 포함된 리액트 프로젝트입니다.
-      </Description>
-      <ButtonGroup>
-        <NavButton to="/login">로그인</NavButton>
-        <NavButton to="/register">회원가입</NavButton>
-      </ButtonGroup>
-    </Wrapper>
+    <PageWrapper> {/* 추가 */}
+      <PageInner>   {/* 추가 */}
+        <Wrapper>
+          <Title>나만의 리액트 홈페이지</Title>
+          <Description>
+            게시판, 회원가입, 마이페이지 기능이 포함된 리액트 프로젝트입니다.
+          </Description>
+          <ButtonGroup>
+            <NavButton to="/login">로그인</NavButton>
+            <NavButton to="/register">회원가입</NavButton>
+          </ButtonGroup>
+        </Wrapper>
+      </PageInner>  
+    </PageWrapper> 
   );
 };
 

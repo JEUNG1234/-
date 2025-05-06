@@ -53,10 +53,10 @@ const Header = () => {
 
   return (
     <HeaderContainer>
-      <Nav>
-        <NavItem to="/">홈</NavItem>
+     <Nav>
+        <NavItem to="/">홈</NavItem> {/* 이 링크가 이제 PollList를 가리킵니다. */}
         <NavItem to="/board">게시판</NavItem>
-        {user && <NavItem to="/board/new">글쓰기</NavItem>}
+        {user && <NavItem to="/board/new">글쓰기</NavItem>} {/* 게시판 글쓰기는 유지 */}
         {user && <NavItem to="/mypage">마이페이지</NavItem>}
       </Nav>
 

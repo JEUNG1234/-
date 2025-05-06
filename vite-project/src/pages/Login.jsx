@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useUserStore from '../store/useUserStore';
 import { toast } from 'react-toastify';
-import { PrimaryButton } from '../components/CommonStyles'; // 추가
+import { PrimaryButton } from '../components/CommonStyles';
+import { PageWrapper, PageInner } from '../components/PageLayout'; // 추가
 
 const Wrapper = styled.div`
   display: flex;
@@ -13,19 +14,6 @@ const Wrapper = styled.div`
   min-height: 100vh;
   background: #f0f2f5;
   padding: 1rem;
-`;
-
-const PageWrapper = styled.div`
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 3rem 1rem;
-  background-color: #f9f9f9;
-
-  @media (max-width: 768px) {
-    padding: 2rem 1rem;
-  }
 `;
 
 const LoginBox = styled.div`
@@ -89,28 +77,30 @@ const Login = () => {
   };
 
   return (
-    <PageWrapper>
-      <Wrapper>
-        <LoginBox>
-          <Title>로그인</Title>
-          <Input
-            type="email"
-            name="email"
-            placeholder="이메일"
-            value={form.email}
-            onChange={handleChange}
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="비밀번호"
-            value={form.password}
-            onChange={handleChange}
-          />
-          <PrimaryButton onClick={handleLogin}>로그인</PrimaryButton>
-        </LoginBox>
-      </Wrapper>
-    </PageWrapper>
+    <PageWrapper>  {/* 추가 */}
+      <PageInner>    {/* 추가 */}
+        <Wrapper>
+          <LoginBox>
+            <Title>로그인</Title>
+            <Input
+              type="email"
+              name="email"
+              placeholder="이메일"
+              value={form.email}
+              onChange={handleChange}
+            />
+            <Input
+              type="password"
+              name="password"
+              placeholder="비밀번호"
+              value={form.password}
+              onChange={handleChange}
+            />
+            <PrimaryButton onClick={handleLogin}>로그인</PrimaryButton>
+          </LoginBox>
+        </Wrapper>
+      </PageInner>  
+    </PageWrapper>  
   );
 };
 

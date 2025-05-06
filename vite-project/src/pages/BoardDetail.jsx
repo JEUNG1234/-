@@ -13,7 +13,7 @@ import {
   DangerButton,
   SuccessButton,
 } from '../components/CommonStyles';
-import { PageWrapper, PageInner } from '../components/PageLayout';
+import { PageWrapper, PageInner } from '../components/PageLayout'; // 추가
 
 import styled from 'styled-components';
 
@@ -134,8 +134,8 @@ const BoardDetail = () => {
   if (!post) return null;
 
   return (
-    <PageWrapper>
-      <PageInner>
+    <PageWrapper> {/* 추가 */}
+      <PageInner>   {/* 추가 */}
         <Container>
           <h2>{post.title}</h2>
           <p style={{ lineHeight: '1.7', marginBottom: '2rem' }}>{post.body}</p>
@@ -197,8 +197,8 @@ const BoardDetail = () => {
             <SuccessButton onClick={handleCommentSubmit}>댓글 등록</SuccessButton>
           </CommentSection>
         </Container>
-      </PageInner>
-    </PageWrapper>
+      </PageInner>  
+    </PageWrapper>  
   );
 };
 
