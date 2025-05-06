@@ -1,77 +1,79 @@
 import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
 import axios from 'axios';
-import { ClipLoader } from 'react-spinners';
+import { Link } from 'react-router-dom';
+import styled from 'styled-components';
 
-const Container = styled.div`
-  max-width: 800px;
-  margin: 3rem auto;
-  padding: 1rem;
+import { Container, PrimaryButton } from '../components/CommonStyles';
+import { PageWrapper} from "../components/CommonStyles";
+
+const PostItem = styled.li`
+  border-bottom: 1px solid #ddd;
+  padding: 1rem 0;
+
+  a {
+    font-size: 1.1rem;
+    color: #0070f3;
+    font-weight: bold;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  small {
+    display: block;
+    margin-top: 0.3rem;
+    color: #888;
+  }
 `;
 
-const PostCard = styled.div`
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.06);
+const HeaderGroup = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 `;
 
-const Title = styled.h3`
-  margin: 0;
-  font-size: 1.25rem;
-`;
-
-const Body = styled.p`
-  color: #555;
-`;
-
-const Author = styled.span`
-  display: block;
-  text-align: right;
-  font-size: 0.9rem;
-  color: #888;
+const Title = styled.h2`
+  font-size: 1.6rem;
+  color: #333;
 `;
 
 const BoardList = () => {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   const fetchPosts = async () => {
-    try {
-      const res = await axios.get('http://localhost:3001/posts');
-      setPosts(res.data);
-    } catch (err) {
-      console.error('게시글 불러오기 실패:', err);
-    } finally {
-      setLoading(false);
-    }
+    const res = await axios.get('http://localhost:3001/posts');
+    setPosts(res.data.reverse()); // 최신순 정렬
   };
 
   useEffect(() => {
     fetchPosts();
   }, []);
 
-  if (loading) {
-    return (
-      <Container style={{ textAlign: 'center' }}>
-        <ClipLoader color="#36d7b7" />
-      </Container>
-    );
-  }
-
   return (
-    <Container>
-      <h2>📋 게시글 목록</h2>
-      {posts.map((post) => (
-        <PostCard key={post.id}>
-          <Title>{post.title}</Title>
-          <Body>{post.body}</Body>
-          <Author>작성자: {post.author}</Author>
-        </PostCard>
-      ))}
-    </Container>
+    <PageWrapper>
+      <PageInner>
+        <Container>
+          <HeaderGroup>
+            <Title>게시판</Title>
+            <PrimaryButton as={Link} to="/board/new">
+              글쓰기
+            </PrimaryButton>
+          </HeaderGroup>
+
+          <ul>
+            {posts.map((post) => (
+              <PostItem key={post.id}>
+                <Link to={`/board/${post.id}`}>{post.title}</Link>
+                <small>{post.author} · {new Date(post.createdAt).toLocaleString()}</small>
+              </PostItem>
+            ))}
+          </ul>
+        </Container>
+      </PageInner>
+    </PageWrapper>
   );
 };
 

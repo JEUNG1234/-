@@ -4,6 +4,7 @@ import { ThemeProvider } from 'styled-components';
 import GlobalStyle from './styles/GlobalStyle';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Header from './components/Header';
 
 const theme = {
   background: '#f4f4f4',
@@ -13,6 +14,7 @@ const theme = {
 const App = () => (
   <ThemeProvider theme={theme}>
     <GlobalStyle />
+    <Header /> 
     <Router />
     <ToastContainer />
   </ThemeProvider>

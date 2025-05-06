@@ -1,25 +1,46 @@
 {
   "users": [
     {
-      "id": "9e5a",
       "name": "ㅇㄴㅁ",
+      "email": "ewq@ewq",
+      "password": "123124421",
+      "id": "9e5a"
+    },
+    {
+      "id": "bed9",
+      "name": "새벽의비구름",
       "email": "ewq@ewq",
       "password": "123124421"
     }
   ],
   "posts": [
-  {
-    "id": 1,
-    "title": "첫 번째 게시글",
-    "body": "내용입니다.",
-    "author": "홍길동"
-  },
-  {
-    "id": 2,
-    "title": "두 번째 게시글",
-    "body": "React + Zustand + json-server!",
-    "author": "이몽룡"
-  }
-]
-
+    {
+      "id": "1",
+      "title": "첫 번째 게시글",
+      "body": "내용입니다.",
+      "author": "홍길동",
+      "createdAt": "2025-05-01T09:00:00"
+    },
+    {
+      "id": "2",
+      "title": "두 번째 게시글",
+      "body": "React + Zustand + json-server!",
+      "author": "이몽룡",
+      "createdAt": "2025-05-01T09:30:00"
+    },
+    {
+      "id": "6e07",
+      "title": "ㅇㄴ",
+      "body": "ㅇㄴ",
+      "author": "ㅇㄴㅁ",
+      "createdAt": "2025-05-06T20:19:38.880Z"
+    },
+    {
+      "id": "64c7",
+      "title": "ㅊㄴ",
+      "body": "ㅊㄴ",
+      "author": "ㅇㄴㅁ",
+      "createdAt": "2025-05-06T20:21:42.501Z"
+    }
+  ]
 }

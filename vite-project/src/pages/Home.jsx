@@ -1,60 +1,53 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import useUserStore from '../store/useUserStore';
+import { PrimaryButton } from '../components/CommonStyles'; // 추가
 
-const Container = styled.div`
-  max-width: 600px;
-  margin: 3rem auto;
-  padding: 2rem;
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f2f2f2;
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+`;
+
+const Description = styled.p`
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: #666;
   text-align: center;
+  max-width: 600px;
 `;
 
-const Button = styled(Link)`
-  display: inline-block;
-  margin: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #0070f3;
-  color: white;
-  border-radius: 6px;
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
+
+const NavButton = styled(PrimaryButton).attrs({ as: Link })`
   text-decoration: none;
-  font-weight: bold;
-
-  &:hover {
-    background-color: #0059c1;
-  }
-`;
-
-const LogoutButton = styled.button`
-  margin-top: 1rem;
-  padding: 0.5rem 1.2rem;
-  background-color: #b82323;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  display: inline-block;
 `;
 
 const Home = () => {
-  const { user, logout } = useUserStore();
-
   return (
-    <Container>
-      {user ? (
-        <>
-          <h2>안녕하세요, <strong>{user.name}</strong>님!</h2>
-          <p>오늘도 좋은 하루 되세요</p>
-          <LogoutButton onClick={logout}>로그아웃</LogoutButton>
-        </>
-      ) : (
-        <>
-          <h2>환영합니다!</h2>
-          <p>계정을 만들어 서비스를 시작해보세요</p>
-          <Button to="/login">로그인</Button>
-          <Button to="/register">회원가입</Button>
-        </>
-      )}
-    </Container>
+    <Wrapper>
+      <Title>나만의 리액트 홈페이지</Title>
+      <Description>
+        게시판, 회원가입, 마이페이지 기능이 포함된 리액트 프로젝트입니다.
+      </Description>
+      <ButtonGroup>
+        <NavButton to="/login">로그인</NavButton>
+        <NavButton to="/register">회원가입</NavButton>
+      </ButtonGroup>
+    </Wrapper>
   );
 };
 
