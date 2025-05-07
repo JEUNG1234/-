@@ -14,12 +14,14 @@ export const Container = styled.div`
 // 입력 필드
 export const Input = styled.input`
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding: 0.6rem 1rem;  // 세로 패딩을 기존 0.8rem에서 0.6rem으로 조금 줄입니다.
   margin-bottom: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 1rem;
+  line-height: 1.5;     // line-height를 적절히 설정합니다.
 `;
+
 
 // 텍스트영역
 export const Textarea = styled.textarea`

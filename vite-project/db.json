@@ -11,6 +11,30 @@
       "name": "새벽의비구름",
       "email": "ewq@ewq",
       "password": "123124421"
+    },
+    {
+      "name": "정민구",
+      "email": "qwer@asdf",
+      "password": "123456",
+      "id": "c1b2"
+    },
+    {
+      "id": "2243",
+      "name": "123",
+      "email": "asdf@zxcv",
+      "password": "qwerty"
+    },
+    {
+      "id": "e8e6",
+      "name": "ㅂㅈㄷㄱ",
+      "email": "123@123",
+      "password": "123456"
+    },
+    {
+      "id": "7152",
+      "name": "ㅂㅈㄷㄳ",
+      "email": "zxcv@zxcv",
+      "password": "123456"
     }
   ],
   "posts": [
@@ -41,12 +65,27 @@
       "body": "ㄹㄷ",
       "author": "ㅇㄴㅁ",
       "createdAt": "2025-05-06T21:36:21.508Z"
+    },
+    {
+      "id": "84d9",
+      "title": "ㅇㅈ",
+      "body": "ㅇㅈ",
+      "author": "익명",
+      "createdAt": "2025-05-07T02:29:52.226Z"
+    },
+    {
+      "id": "3278",
+      "title": "532",
+      "body": "532",
+      "author": "정민구",
+      "createdAt": "2025-05-07T02:32:49.169Z"
     }
   ],
   "polls": [
     {
       "id": "1",
       "title": "가장 좋아하는 계절은?",
+      "pollType": "singleChoice",
       "options": [
         {
           "id": "opt1",
@@ -61,7 +100,7 @@
         {
           "id": "opt3",
           "text": "가을",
-          "votes": 0
+          "votes": 1
         },
         {
           "id": "opt4",
@@ -71,11 +110,12 @@
       ],
       "createdAt": "2025-05-08T10:00:00Z",
       "author": "운영자",
-      "totalVotes": 1
+      "totalVotes": 2
     },
     {
       "id": "2",
-      "title": "선호하는 프로그래밍 언어는?",
+      "title": "선호하는 프로그래밍 언어는? (여러 개 선택 가능)",
+      "pollType": "multipleChoice",
       "options": [
         {
           "id": "opt1",
@@ -90,7 +130,7 @@
         {
           "id": "opt3",
           "text": "Java",
-          "votes": 1
+          "votes": 2
         },
         {
           "id": "opt4",
@@ -100,7 +140,215 @@
       ],
       "createdAt": "2025-05-09T11:30:00Z",
       "author": "개발팀",
+      "totalVotes": 2
+    },
+    {
+      "id": "3",
+      "title": "즐겨 사용하는 클라우드 서비스는? (모두 선택)",
+      "pollType": "multipleChoice",
+      "options": [
+        {
+          "id": "optA",
+          "text": "AWS",
+          "votes": 1
+        },
+        {
+          "id": "optB",
+          "text": "Azure",
+          "votes": 1
+        },
+        {
+          "id": "optC",
+          "text": "Google Cloud",
+          "votes": 1
+        },
+        {
+          "id": "optD",
+          "text": "기타",
+          "votes": 1
+        }
+      ],
+      "createdAt": "2025-05-10T14:00:00Z",
+      "author": "인프라팀",
       "totalVotes": 1
+    },
+    {
+      "id": "1ce1",
+      "title": "3232",
+      "pollType": "multipleChoice",
+      "options": [
+        {
+          "id": "opt_1746583840553_0",
+          "text": "31",
+          "votes": 1
+        },
+        {
+          "id": "opt_1746583840553_1",
+          "text": "32",
+          "votes": 1
+        }
+      ],
+      "author": "정민구",
+      "createdAt": "2025-05-07T02:10:40.553Z",
+      "totalVotes": 1
+    },
+    {
+      "id": "cda6",
+      "title": "213",
+      "pollType": "multipleChoice",
+      "options": [
+        {
+          "id": "opt_1746585102250_0",
+          "text": "421421",
+          "votes": 1
+        },
+        {
+          "id": "opt_1746585102250_1",
+          "text": "421412",
+          "votes": 1
+        },
+        {
+          "id": "opt_1746585102250_2",
+          "text": "421421",
+          "votes": 0
+        }
+      ],
+      "author": "123",
+      "createdAt": "2025-05-07T02:31:42.250Z",
+      "totalVotes": 1
+    },
+    {
+      "id": "2aeb",
+      "title": "dw",
+      "pollType": "multipleChoice",
+      "options": [
+        {
+          "id": "opt_1746586604084_0",
+          "text": "dw",
+          "votes": 0
+        },
+        {
+          "id": "opt_1746586604084_1",
+          "text": "dw",
+          "votes": 0
+        },
+        {
+          "id": "opt_1746586604084_2",
+          "text": "dw",
+          "votes": 0
+        }
+      ],
+      "author": "정민구",
+      "createdAt": "2025-05-07T02:56:44.084Z",
+      "totalVotes": 0
+    },
+    {
+      "id": "cd2c",
+      "title": "asdga",
+      "pollType": "singleChoice",
+      "options": [
+        {
+          "id": "opt_1746588645310_0",
+          "text": "421",
+          "votes": 0
+        },
+        {
+          "id": "opt_1746588645310_1",
+          "text": "421",
+          "votes": 0
+        }
+      ],
+      "author": "정민구",
+      "createdAt": "2025-05-07T03:30:45.310Z",
+      "totalVotes": 0
+    },
+    {
+      "id": "bb12",
+      "title": "543",
+      "pollType": "singleChoice",
+      "options": [
+        {
+          "id": "opt_1746589350599_0",
+          "text": "53",
+          "votes": 0
+        },
+        {
+          "id": "opt_1746589350599_1",
+          "text": "35",
+          "votes": 0
+        }
+      ],
+      "author": "정민구",
+      "createdAt": "2025-05-07T03:42:30.599Z",
+      "totalVotes": 0
     }
-  ]
+  ],
+  "surveys": [
+    {
+      "id": "36bc",
+      "title": "학원설문!",
+      "description": "kh정보교육원 설문입니다.",
+      "author": "정민구",
+      "createdAt": "2025-05-07T05:25:24.526Z",
+      "status": "published",
+      "questions": [
+        {
+          "qId": "baf53024-4942-4afb-b13b-51d66cce1460",
+          "qText": "어렵나요?",
+          "qType": "singleChoice",
+          "isRequired": false,
+          "options": [
+            {
+              "optId": "bce5a22e-35f5-4820-b762-6e0567796f15",
+              "text": "네",
+              "votes": 0
+            },
+            {
+              "optId": "21611080-e364-490b-93c2-1984238b6a41",
+              "text": "네!!!",
+              "votes": 0
+            }
+          ]
+        },
+        {
+          "qId": "a891d1ef-4f1d-4508-be8b-1612fca848d8",
+          "qText": "쉽나요?",
+          "qType": "singleChoice",
+          "isRequired": true,
+          "options": [
+            {
+              "optId": "7eacc554-4d1c-4861-9a9a-b70a84592828",
+              "text": "아뇨?",
+              "votes": 0
+            },
+            {
+              "optId": "0767e0a7-c459-4076-b4ef-06bf857d452d",
+              "text": "아뇨!!!!!!!!",
+              "votes": 0
+            }
+          ]
+        },
+        {
+          "qId": "758be531-556f-4cce-a30d-b17c04f93a6f",
+          "qText": "빡센가요?",
+          "qType": "multipleChoice",
+          "isRequired": false,
+          "options": [
+            {
+              "optId": "9c7edc77-dab1-44ea-9de0-0b5306108d39",
+              "text": "네...",
+              "votes": 0
+            },
+            {
+              "optId": "f160fbfa-ebc1-4283-a9d1-047523c9acfd",
+              "text": "엄청,,,",
+              "votes": 0
+            }
+          ]
+        }
+      ],
+      "totalRespondents": 0
+    }
+  ],
+  "comments": []
 }

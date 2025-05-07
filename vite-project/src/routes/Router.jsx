@@ -2,8 +2,7 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 
-// 기존 페이지 컴포넌트들
-import Home from '../pages/Home'; // 지금은 사용하지 않지만, 필요하면 다시 활용 가능
+// 페이지 컴포넌트들
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Mypage from '../pages/Mypage';
@@ -15,34 +14,56 @@ import BoardCreate from '../pages/BoardCreate';
 import BoardDetail from '../pages/BoardDetail';
 import BoardEdit from '../pages/BoardEdit';
 
-// 새로 추가된 투표 관련 컴포넌트들
+// Poll (단일 질문 투표) 관련 컴포넌트들
 import PollList from '../pages/poll/PollList';
 import PollDetail from '../pages/poll/PollDetail';
+import PollCreate from '../pages/poll/PollCreate';
+import PollEdit from '../pages/poll/PollEdit';
+
+// Survey (다중 질문 설문) 관련 컴포넌트
+import SurveyList from '../pages/survey/SurveyList';
+import SurveyCreate from '../pages/survey/SurveyCreate';
+import SurveyDetail from '../pages/survey/SurveyDetail';
+import SurveyEdit from '../pages/survey/SurveyEdit';     // 임포트 주석 해제 또는 추가
+import SurveyResult from '../pages/survey/SurveyResult'; // 임포트 주석 해제 또는 추가
+
+// 메인 대시보드 페이지 (HOT 항목만 표시)
+import MainDashboardPage from '../pages/MainDashboardPage';
+
 
 const Router = () => {
   return (
     <Routes>
-      {/* 메인 페이지를 PollList로 변경 */}
-      <Route path="/" element={<PollList />} />
-      {/* <Route path="/" element={<Home />} /> 기존 홈 라우트 주석 처리 또는 삭제 */}
+      {/* 홈 페이지는 HOT 항목만 보여주는 MainDashboardPage */}
+      <Route path="/" element={<MainDashboardPage />} />
 
-      {/* 인증 관련 페이지 */}
+      {/* 전체 설문 목록 페이지 */}
+      <Route path="/surveys" element={<SurveyList />} />
+      {/* 전체 투표 목록 페이지 */}
+      <Route path="/polls" element={<PollList />} />
+
+      {/* 인증 관련 라우트 */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/mypage" element={<Mypage />} />
 
-      {/* 게시판 관련 페이지 (기존 유지) */}
+      {/* 게시판 관련 라우트 */}
       <Route path="/board" element={<BoardList />} />
       <Route path="/board/new" element={<BoardCreate />} />
       <Route path="/board/:id" element={<BoardDetail />} />
       <Route path="/board/edit/:id" element={<BoardEdit />} />
 
-      {/* 투표 관련 페이지 */}
+      {/* 개별 Poll 생성/상세/수정 라우트 */}
+      <Route path="/polls/new" element={<PollCreate />} />
       <Route path="/polls/:id" element={<PollDetail />} />
-      {/* 나중에 투표 생성 페이지 추가 시: <Route path="/polls/new" element={<PollCreate />} /> */}
+      <Route path="/polls/edit/:id" element={<PollEdit />} />
 
+      {/* 개별 Survey 생성/상세 라우트 (+ 필요시 수정/결과 라우트) */}
+      <Route path="/surveys/new" element={<SurveyCreate />} />
+      <Route path="/surveys/:id" element={<SurveyDetail />} />
+      <Route path="/surveys/:id/edit" element={<SurveyEdit />} />     {/* 라우트 주석 해제 */}
+      <Route path="/surveys/:id/results" element={<SurveyResult />} /> {/* 라우트 주석 해제 */}
 
-      {/* 일치하는 경로가 없을 경우 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

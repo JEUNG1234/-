@@ -102,20 +102,61 @@ const Mypage = () => {
   }
 
   return (
-    <PageWrapper> {/* 최상위를 PageWrapper로 감싸줍니다. */}
-      <PageInner>   {/* 그 안에 PageInner를 사용합니다. */}
-        <Container> {/* 페이지의 실제 콘텐츠를 Container로 감싸줍니다. */}
+    <PageWrapper>
+      <PageInner>
+        <Container>
           <Title>내 정보</Title>
-          <Input name="name" value={form.name} onChange={handleChange} placeholder="이름" />
-          <Input name="email" value={form.email} onChange={handleChange} placeholder="이메일" />
-          <Input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="비밀번호"
-          />
-          <PrimaryButton onClick={handleUpdate}>정보 수정</PrimaryButton>
+
+          {/* 이름 입력 필드 */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="name" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+              이름
+            </label>
+            <Input // CommonStyles에서 가져온 Input 컴포넌트 사용
+              id="name"
+              name="name"
+              value={form.name}
+              readOnly 
+              onChange={handleChange}
+              placeholder="이름"
+              style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
+            />
+          </div>
+
+          {/* 이메일 입력 필드 */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="email" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+              이메일
+            </label>
+            <Input // CommonStyles에서 가져온 Input 컴포넌트 사용
+              id="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange} // 실제로는 이메일 변경을 허용하지 않을 수 있습니다.
+              placeholder="이메일"
+              readOnly // 이메일은 보통 수정 불가 처리
+              style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
+            />
+          </div>
+
+          {/* 새 비밀번호 입력 필드 */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="password" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+              새 비밀번호
+            </label>
+            <Input // CommonStyles에서 가져온 Input 컴포넌트 사용
+              id="password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="새 비밀번호 (변경 시에만 입력)"
+            />
+          </div>
+
+          <PrimaryButton onClick={handleUpdate} style={{ marginTop: '1rem' }}>
+            정보 수정
+          </PrimaryButton>
 
           <Divider />
 
