@@ -79,6 +79,20 @@
       "body": "532",
       "author": "정민구",
       "createdAt": "2025-05-07T02:32:49.169Z"
+    },
+    {
+      "id": "265a",
+      "title": "dw",
+      "body": "dw",
+      "author": "익명",
+      "createdAt": "2025-05-07T05:42:08.862Z"
+    },
+    {
+      "id": "3f25",
+      "title": "안녕하세요",
+      "body": "안녕하세요",
+      "author": "ㅂㅈㄷㄱ",
+      "createdAt": "2025-05-07T05:45:56.950Z"
     }
   ],
   "polls": [
@@ -301,7 +315,7 @@
             {
               "optId": "bce5a22e-35f5-4820-b762-6e0567796f15",
               "text": "네",
-              "votes": 0
+              "votes": 1
             },
             {
               "optId": "21611080-e364-490b-93c2-1984238b6a41",
@@ -319,7 +333,7 @@
             {
               "optId": "7eacc554-4d1c-4861-9a9a-b70a84592828",
               "text": "아뇨?",
-              "votes": 0
+              "votes": 1
             },
             {
               "optId": "0767e0a7-c459-4076-b4ef-06bf857d452d",
@@ -337,7 +351,7 @@
             {
               "optId": "9c7edc77-dab1-44ea-9de0-0b5306108d39",
               "text": "네...",
-              "votes": 0
+              "votes": 1
             },
             {
               "optId": "f160fbfa-ebc1-4283-a9d1-047523c9acfd",
@@ -347,7 +361,7 @@
           ]
         }
       ],
-      "totalRespondents": 0
+      "totalRespondents": 1
     }
   ],
   "comments": []
