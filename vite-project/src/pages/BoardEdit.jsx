@@ -21,7 +21,7 @@ const BoardEdit = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/posts/${id}`);
+        const res = await axios.get(`http://localhost:8888/api/boards/${id}`);
         if (user?.name !== res.data.author) {
           toast.error('수정 권한이 없습니다.');
           navigate('/board');
@@ -50,7 +50,7 @@ const BoardEdit = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:3001/posts/${id}`, form);
+      await axios.put(`http://localhost:8888/api/boards/${id}`, form);
       toast.success('수정 완료!');
       navigate(`/board/${id}`);
     } catch (error) {

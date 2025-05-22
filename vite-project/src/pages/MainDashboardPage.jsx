@@ -120,13 +120,13 @@ const MainDashboardPage = () => {
     const fetchData = async () => {
       try {
         // 설문 데이터 가져오기
-        const surveyRes = await axios.get('http://localhost:3001/surveys');
+        const surveyRes = await axios.get('http://localhost:8888/api/surveys');
         const surveysData = surveyRes.data;
         const sortedByRespondents = [...surveysData].sort((a, b) => (b.totalRespondents || 0) - (a.totalRespondents || 0));
         setHotSurveys(sortedByRespondents.slice(0, NUMBER_OF_HOT_ITEMS));
 
         // 투표 데이터 가져오기
-        const pollRes = await axios.get('http://localhost:3001/polls');
+        const pollRes = await axios.get('http://localhost:8888/api/polls');
         const pollsData = pollRes.data;
         const sortedByVotes = [...pollsData].sort((a, b) => b.totalVotes - a.totalVotes);
         setHotPolls(sortedByVotes.slice(0, NUMBER_OF_HOT_ITEMS));

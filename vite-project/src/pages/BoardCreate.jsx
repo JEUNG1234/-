@@ -36,7 +36,7 @@ const BoardCreate = () => {
       createdAt: new Date().toISOString(),
     };
 
-    await axios.post('http://localhost:3001/posts', newPost);
+    await axios.post('http://localhost:8888/api/boards', newPost);
     toast.success('작성 완료!');
     navigate('/board');
   };

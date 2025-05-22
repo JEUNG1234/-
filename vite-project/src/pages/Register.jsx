@@ -49,13 +49,13 @@ const Register = () => {
   const onSubmit = async (data) => {
     try {
       // 동일 이메일 사용자가 있는지 먼저 확인 (선택 사항이지만 좋은 UX)
-      const existingUsersRes = await axios.get(`http://localhost:3001/users?email=${data.email}`);
+      const existingUsersRes = await axios.get(`http://localhost:8888/api/members?email=${data.email}`)
       if (existingUsersRes.data && existingUsersRes.data.length > 0) {
         toast.error('이미 사용 중인 이메일입니다.');
         return;
       }
 
-      await axios.post('http://localhost:3001/users', data);
+      await axios.post('http://localhost:8888/api/members', data);
       toast.success('회원가입 성공! 로그인 페이지로 이동합니다.');
       reset();
       navigate('/login'); // 3. 회원가입 성공 후 로그인 페이지로 이동

@@ -89,7 +89,7 @@ const PollList = () => {
   useEffect(() => {
     const fetchPolls = async () => {
       try {
-        const res = await axios.get('http://localhost:3001/polls');
+        const res = await axios.get('http://localhost:8888/api/polls');
         const pollsData = res.data;
 
         const sortedAllPolls = [...pollsData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

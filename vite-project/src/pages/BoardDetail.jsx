@@ -121,7 +121,7 @@ const BoardDetail = () => {
   const fetchPost = useCallback(async () => {
     setIsLoadingPost(true);
     try {
-      const res = await axios.get(`http://localhost:3001/posts/${postId}`);
+      const res = await axios.get(`http://localhost:8888/api/boards/${postId}`);
       setPost(res.data);
     } catch (err) {
       toast.error('게시글을 불러오지 못했습니다.');
@@ -135,7 +135,9 @@ const BoardDetail = () => {
   const fetchComments = useCallback(async () => {
     setIsLoadingComments(true);
     try {
-      const res = await axios.get(`http://localhost:3001/comments?postId=${postId}`);
+      const res = await axios.get(`http://localhost:8888/api/comments?postId=${postId}`);
+// 또는 백엔드 설계에 따라:
+// const res = await axios.get(`http://localhost:8888/api/boards/${postId}/comments`);
       setComments(res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (err) { // 여기가 BoardDetail.jsx:145 (이전 오류 로그 기준)
       toast.error('댓글을 불러오지 못했습니다.');
@@ -157,7 +159,7 @@ const BoardDetail = () => {
     }
     if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
       try {
-        await axios.delete(`http://localhost:3001/posts/${postId}`);
+        await axios.delete(`http://localhost:8888/api/boards/${postId}`);
         toast.success('게시글이 삭제되었습니다.');
         navigate('/board');
       } catch (error) {
@@ -187,7 +189,9 @@ const BoardDetail = () => {
         content: newComment.trim(),
         createdAt: new Date().toISOString(),
       };
-      await axios.post('http://localhost:3001/comments', commentData);
+      await axios.post('http://localhost:8888/api/comments', commentData);
+// 또는 백엔드 설계에 따라:
+// await axios.post(`http://localhost:8888/api/boards/${postId}/comments`, commentData);
       setNewComment('');
       toast.success('댓글이 등록되었습니다.');
       fetchComments();
@@ -209,7 +213,7 @@ const BoardDetail = () => {
     if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
       setIsDeletingComment(commentId);
       try {
-        await axios.delete(`http://localhost:3001/comments/${commentId}`);
+        await axios.delete(`http://localhost:8888/api/comments/${commentId}`);
         toast.success('댓글이 삭제되었습니다.');
         fetchComments();
       } catch (error) {
@@ -245,7 +249,7 @@ const BoardDetail = () => {
         ...originalComment,
         content: editContent.trim(),
       };
-      await axios.put(`http://localhost:3001/comments/${commentId}`, updatedCommentData);
+      await axios.put(`http://localhost:8888/api/comments/${commentId}`, updatedCommentData);
       toast.success('댓글이 수정되었습니다.');
       setEditCommentId(null);
       setEditContent('');

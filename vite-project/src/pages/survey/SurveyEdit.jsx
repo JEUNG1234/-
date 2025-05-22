@@ -139,7 +139,7 @@ const SurveyEdit = () => {
       }
       setIsLoading(true);
       try {
-        const response = await axios.get(`http://localhost:3001/surveys/${surveyId}`);
+        const response = await axios.get(`http://localhost:8888/api/surveys/${surveyId}`);
         const surveyData = response.data;
 
         if (!user || user.name !== surveyData.author) {
@@ -303,7 +303,7 @@ const SurveyEdit = () => {
     };
 
     try {
-      await axios.put(`http://localhost:3001/surveys/${surveyId}`, updatedSurveyData);
+      await axios.put(`http://localhost:8888/api/surveys/${surveyId}`, updatedSurveyData);
       toast.success('설문이 성공적으로 수정되었습니다!');
       navigate(`/surveys/${surveyId}`);
     } catch (error) {

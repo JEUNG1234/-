@@ -93,7 +93,7 @@ const PollEdit = () => {
     const fetchPollData = async () => {
       if (!pollId) return;
       try {
-        const res = await axios.get(`http://localhost:3001/polls/${pollId}`);
+        const res = await axios.get(`http://localhost:8888/api/polls/${pollId}`);
         const pollData = res.data;
 
         if (!user || user.name !== pollData.author) {
@@ -172,7 +172,7 @@ const PollEdit = () => {
     updatedPollData.totalVotes = updatedPollData.options.reduce((sum, opt) => sum + opt.votes, 0);
 
     try {
-      await axios.put(`http://localhost:3001/polls/${pollId}`, updatedPollData);
+      await axios.put(`http://localhost:8888/api/polls/${pollId}`, updatedPollData);
       toast.success('투표가 수정되었습니다!');
       navigate(`/polls/${pollId}`);
     } catch (error) {

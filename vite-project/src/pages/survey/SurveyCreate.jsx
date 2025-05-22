@@ -253,7 +253,7 @@ const SurveyCreate = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:3001/surveys', newSurvey);
+      const response = await axios.post('http://localhost:8888/api/surveys', newSurvey);
       toast.success('새로운 설문지가 생성되었습니다!');
       console.log('New survey created:', response.data);
 

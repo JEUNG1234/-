@@ -143,11 +143,11 @@ const SurveyResult = () => {
     const fetchSurveyData = async () => {
       setIsLoading(true);
       try {
-        const surveyRes = await axios.get(`http://localhost:3001/surveys/${surveyId}`);
+        const surveyRes = await axios.get(`http://localhost:8888/api/surveys/${surveyId}`);
         setSurvey(surveyRes.data);
 
         // 주관식 응답 기능 구현 시 아래 주석 해제 및 API 호출 로직 추가
-        // const individualResponsesRes = await axios.get(`http://localhost:3001/individualResponses?surveyId=${surveyId}`);
+        // const individualResponsesRes = await axios.get(`http://localhost:8888/api/individualResponses?surveyId=${surveyId}`);`
         // setIndividualResponses(individualResponsesRes.data); 
       } catch (error) {
         toast.error('설문 결과를 불러오는데 실패했습니다.');

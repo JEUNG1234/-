@@ -197,7 +197,7 @@ const SurveyDetail = () => {
     const fetchSurvey = async () => {
       if (!surveyId) return;
       try {
-        const res = await axios.get(`http://localhost:3001/surveys/${surveyId}`);
+        const res = await axios.get(`http://localhost:8888/api/surveys/${surveyId}`);
         setSurvey(res.data);
         const initialResponses = {};
         if (res.data && res.data.questions) {
@@ -297,7 +297,7 @@ const SurveyDetail = () => {
         totalRespondents: updatedTotalRespondents,
       };
 
-      await axios.put(`http://localhost:3001/surveys/${surveyId}`, surveyUpdatePayload);
+      await axios.put(`http://localhost:8888/api/surveys/${surveyId}`, surveyUpdatePayload)
 
       if (user) {
         localStorage.setItem(`survey_participation_${surveyId}_${user.id}`, 'true');
@@ -321,7 +321,7 @@ const SurveyDetail = () => {
     }
     if (window.confirm('정말로 이 설문을 삭제하시겠습니까? 모든 응답 데이터도 함께 삭제됩니다.')) {
         try {
-            await axios.delete(`http://localhost:3001/surveys/${surveyId}`);
+            await axios.delete(`http://localhost:8888/api/surveys/${surveyId}`);
             toast.success('설문이 삭제되었습니다.');
             Object.keys(localStorage).forEach(key => {
               if (key.startsWith(`survey_participation_${surveyId}_`)) {

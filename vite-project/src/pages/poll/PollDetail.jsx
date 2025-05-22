@@ -153,7 +153,7 @@ const PollDetail = () => {
     const fetchPoll = async () => {
       if (!pollId) return;
       try {
-        const res = await axios.get(`http://localhost:3001/polls/${pollId}`);
+        const res = await axios.get(`http://localhost:8888/api/polls/${pollId}`);
         setPoll(res.data);
         const votedPollsData = JSON.parse(localStorage.getItem('votedPolls')) || {};
         if (votedPollsData[pollId]) {
@@ -217,7 +217,7 @@ const PollDetail = () => {
         totalVotes: poll.totalVotes + 1,
       };
 
-      await axios.put(`http://localhost:3001/polls/${pollId}`, finalUpdatedPoll);
+      await axios.put(`http://localhost:8888/api/polls/${pollId}`, finalUpdatedPoll);
       setPoll(finalUpdatedPoll);
       setHasVoted(true);
 
@@ -239,7 +239,7 @@ const PollDetail = () => {
     }
     if (window.confirm('정말로 이 투표를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
       try {
-        await axios.delete(`http://localhost:3001/polls/${pollId}`);
+        await axios.delete(`http://localhost:8888/api/polls/${pollId}`);
         toast.success('투표가 삭제되었습니다.');
         const votedPolls = JSON.parse(localStorage.getItem('votedPolls')) || {};
         delete votedPolls[pollId];

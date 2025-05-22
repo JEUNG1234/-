@@ -145,7 +145,7 @@ const PollCreate = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:3001/polls', newPoll);
+      const response = await axios.post('http://localhost:8888/api/polls', newPoll);
       toast.success('새로운 투표가 생성되었습니다!');
       navigate(`/polls/${response.data.id}`);
     } catch (error) {

@@ -73,7 +73,7 @@ const Mypage = () => {
   const fetchUserPosts = async () => {
     if (!user) return; // user가 없을 경우를 대비
     try {
-      const res = await axios.get(`http://localhost:3001/posts?author=${user.name}`);
+      const res = await axios.get(`http://localhost:8888/api/boards?author=${user.name}`);
       setUserPosts(res.data);
     } catch (error) {
       toast.error('게시글을 불러오지 못했습니다.');
@@ -88,7 +88,7 @@ const Mypage = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:3001/users/${user.id}`, form);
+      await axios.put(`http://localhost:8888/api/members/${user.id}`, form);
       toast.success('정보가 수정되었습니다.');
       setUser({ ...user, ...form });
     } catch (error) {

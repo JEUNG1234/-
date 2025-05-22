@@ -102,7 +102,7 @@ const SurveyList = () => {
   useEffect(() => {
     const fetchSurveys = async () => {
       try {
-        const res = await axios.get('http://localhost:3001/surveys'); // 엔드포인트 변경
+        const res = await axios.get('http://localhost:8888/api/surveys'); // 엔드포인트 변경
         const surveysData = res.data;
 
         // 전체 설문 목록 (최신순 정렬)

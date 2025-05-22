@@ -58,7 +58,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/users');
+      const res = await axios.get('http://localhost:8888/api/members');
       const found = res.data.find(
         (u) => u.email === form.email && u.password === form.password
       );
