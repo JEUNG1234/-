@@ -1,15 +1,15 @@
 // src/pages/survey/SurveyEdit.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import styled from 'styled-components';
-import { v4 as uuidv4 } from 'uuid'; // 새 질문/옵션 ID 생성을 위해
+import { v4 as uuidv4 } from 'uuid';
 import useUserStore from '../../store/useUserStore';
 import { PageWrapper, PageInner } from '../../components/PageLayout';
 import { Container, Input, PrimaryButton, DangerButton } from '../../components/CommonStyles';
 
-// SurveyCreate.jsx와 유사한 Styled Components 사용
+// --- Styled Components (기존과 동일) ---
 const SurveyFormTitle = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
@@ -39,8 +39,8 @@ const SurveyDescriptionTextarea = styled.textarea`
 `;
 
 const QuestionCard = styled.div`
-  background: ${props => props.theme.colors.surface || '#f9f9f9'};
-  border: 1px solid #e0e0e0;
+  background: ${props => props.theme.colors.surfaceLight || '#f9f9f9'};
+  border: 1px solid ${props => props.theme.colors.borderLight || '#e0e0e0'};
   border-radius: ${props => props.theme.borderRadius.large || '8px'};
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -114,9 +114,10 @@ const FormActions = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid ${props => props.theme.colors.border || '#eee'};
   padding-top: 1.5rem;
 `;
+// --- Styled Components 끝 ---
 
 
 const SurveyEdit = () => {
@@ -127,53 +128,58 @@ const SurveyEdit = () => {
   const [surveyTitle, setSurveyTitle] = useState('');
   const [surveyDescription, setSurveyDescription] = useState('');
   const [questions, setQuestions] = useState([]);
-  const [originalSurvey, setOriginalSurvey] = useState(null);
+  const [originalAuthorId, setOriginalAuthorId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const fetchSurveyData = async () => {
-      if (!surveyId) {
-        toast.error('잘못된 접근입니다.');
-        navigate('/');
+  const fetchSurveyData = useCallback(async () => {
+    if (!surveyId) {
+        navigate('/404'); // 또는 다른 적절한 처리
+        return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:8888/api/surveys/${surveyId}`);
+      const surveyData = response.data;
+
+      if (!user || user.id !== surveyData.authorId) {
+        toast.error('설문 수정 권한이 없습니다.');
+        navigate(`/surveys/${surveyData.id || surveyId}`);
         return;
       }
-      setIsLoading(true);
-      try {
-        const response = await axios.get(`http://localhost:8888/api/surveys/${surveyId}`);
-        const surveyData = response.data;
 
-        if (!user || user.name !== surveyData.author) {
-          toast.error('수정 권한이 없습니다.');
-          navigate(`/surveys/${surveyId}`);
-          return;
-        }
-
-        setOriginalSurvey(surveyData);
-        setSurveyTitle(surveyData.title);
-        setSurveyDescription(surveyData.description || '');
-        // votes와 같은 추가적인 option 속성을 유지하기 위해 깊은 복사
-        setQuestions(surveyData.questions.map(q => ({
-          ...q,
-          options: q.options ? q.options.map(opt => ({ ...opt })) : []
-        })));
-      } catch (error) {
-        toast.error('설문 정보를 불러오는데 실패했습니다.');
-        console.error("Failed to fetch survey for edit:", error);
-        navigate('/');
-      } finally {
-        setIsLoading(false);
+      setOriginalAuthorId(surveyData.authorId);
+      setSurveyTitle(surveyData.title);
+      setSurveyDescription(surveyData.description || '');
+      setQuestions(surveyData.questions.map(q => ({
+        qId: q.qId,
+        qText: q.qText,
+        qType: q.qType,
+        isRequired: q.isRequired,
+        options: q.options ? q.options.map(opt => ({ optId: opt.optId, text: opt.text, votes: opt.votes || 0 })) : []
+      })));
+    } catch (error) {
+      toast.error('설문 정보를 불러오는데 실패했습니다.');
+      console.error("Failed to fetch survey for edit:", error);
+      if (error.response && error.response.status === 404) {
+        navigate('/404');
+      } else {
+        navigate('/surveys');
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [surveyId, user, navigate]);
 
+  useEffect(() => {
     if (!user) {
       toast.info('수정하려면 로그인이 필요합니다.');
-      navigate('/login');
+      navigate('/login', {replace: true});
       return;
     }
     fetchSurveyData();
-  }, [surveyId, user, navigate]);
+  }, [user, navigate, fetchSurveyData]);
 
-  // --- 질문 및 옵션 핸들러 함수들 (SurveyCreate.jsx에서 가져와 수정) ---
   const handleAddQuestion = () => {
     if (questions.length >= 20) {
         toast.warn('질문은 최대 20개까지 추가할 수 있습니다.');
@@ -185,24 +191,23 @@ const SurveyEdit = () => {
     ]);
   };
 
-  const handleRemoveQuestion = (questionIndex) => {
+  const handleRemoveQuestion = (qIndexToRemove) => {
     if (questions.length <= 1) {
       toast.warn('설문지에는 최소 1개의 질문이 필요합니다.');
       return;
     }
-    setQuestions(prevQuestions => prevQuestions.filter((_, index) => index !== questionIndex));
+    setQuestions(prevQuestions => prevQuestions.filter((_, index) => index !== qIndexToRemove));
   };
 
-  const handleQuestionChange = (questionIndex, field, value) => {
+  const handleQuestionChange = (qIndex, field, value) => {
     const newQuestions = questions.map((q, idx) => {
-      if (idx === questionIndex) {
+      if (idx === qIndex) {
         const updatedQuestion = { ...q, [field]: value };
-        // 질문 유형 변경 시 옵션 처리
         if (field === 'qType') {
           if ((value === 'singleChoice' || value === 'multipleChoice') && (!updatedQuestion.options || updatedQuestion.options.length < 2)) {
             updatedQuestion.options = [{ optId: uuidv4(), text: '', votes: 0 }, { optId: uuidv4(), text: '', votes: 0 }];
-          } else if (value === 'textShort' || value === 'textLong') {
-            delete updatedQuestion.options; // 주관식에는 옵션 없음
+          } else if (value !== 'singleChoice' && value !== 'multipleChoice') {
+            delete updatedQuestion.options;
           }
         }
         return updatedQuestion;
@@ -212,61 +217,49 @@ const SurveyEdit = () => {
     setQuestions(newQuestions);
   };
 
-  const handleAddOption = (questionIndex) => {
-    const newQuestions = questions.map((q, idx) => {
-      if (idx === questionIndex) {
-        if (!q.options) q.options = []; // 혹시 모를 경우 대비
-        if (q.options.length >= 10) {
-            toast.warn('옵션은 최대 10개까지 추가할 수 있습니다.');
-            return q;
-        }
-        return { ...q, options: [...q.options, { optId: uuidv4(), text: '', votes: 0 }] };
-      }
-      return q;
-    });
+  const handleAddOption = (qIndex) => {
+    const newQuestions = [...questions];
+    const question = newQuestions[qIndex];
+    if (!question.options) question.options = [];
+    if (question.options.length >= 10) {
+        toast.warn('옵션은 최대 10개까지 추가할 수 있습니다.');
+        return;
+    }
+    question.options.push({ optId: uuidv4(), text: '', votes: 0 });
     setQuestions(newQuestions);
   };
 
-  const handleRemoveOption = (questionIndex, optionIndex) => {
-    const newQuestions = questions.map((q, idx) => {
-      if (idx === questionIndex) {
-        if (q.options.length <= 2 && (q.qType === 'singleChoice' || q.qType === 'multipleChoice')) {
-          toast.warn('객관식 질문에는 최소 2개의 옵션이 필요합니다.');
-          return q;
-        }
-        return { ...q, options: q.options.filter((_, optIdx) => optIdx !== optionIndex) };
-      }
-      return q;
-    });
+  const handleRemoveOption = (qIndex, optIndexToRemove) => {
+    const newQuestions = [...questions];
+    const question = newQuestions[qIndex];
+    if (question.options.length <= 2 && (question.qType === 'singleChoice' || question.qType === 'multipleChoice')) {
+      toast.warn('객관식 질문에는 최소 2개의 옵션이 필요합니다.');
+      return;
+    }
+    question.options = question.options.filter((_, index) => index !== optIndexToRemove);
     setQuestions(newQuestions);
   };
 
-  const handleOptionTextChange = (questionIndex, optionIndex, value) => {
-    const newQuestions = questions.map((q, idx) => {
-      if (idx === questionIndex) {
-        const newOptions = q.options.map((opt, optIdx) => {
-          if (optIdx === optionIndex) {
-            return { ...opt, text: value };
-          }
-          return opt;
-        });
-        return { ...q, options: newOptions };
-      }
-      return q;
-    });
+  const handleOptionTextChange = (qIndex, optIndex, value) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex].options[optIndex].text = value;
     setQuestions(newQuestions);
   };
-  // --- 핸들러 함수 끝 ---
 
   const handleUpdateSurvey = async (e) => {
     e.preventDefault();
+     if (!user || user.id !== originalAuthorId) {
+        toast.error('설문 수정 권한이 없습니다.');
+        return;
+    }
     if (!surveyTitle.trim()) {
       toast.warn('설문지 제목을 입력해주세요.');
       return;
     }
-    for (const q of questions) {
+    // 유효성 검사 (SurveyCreate와 동일하게 추가)
+    for (const q of questions) { // 'q' 변수가 여기서 사용됩니다.
         if (!q.qText.trim()) {
-            toast.warn('모든 질문의 내용을 입력해주세요.');
+            toast.warn(`질문 ${questions.indexOf(q) + 1}의 내용을 입력해주세요.`);
             return;
         }
         if ((q.qType === 'singleChoice' || q.qType === 'multipleChoice')) {
@@ -281,43 +274,50 @@ const SurveyEdit = () => {
         }
     }
 
-    const updatedSurveyData = {
-      ...originalSurvey, // id, author, createdAt, totalRespondents 등 기존 정보 유지
+    setIsSubmitting(true);
+    const surveyUpdateData = {
       title: surveyTitle.trim(),
       description: surveyDescription.trim(),
       questions: questions.map(q => ({
-        qId: q.qId, // 기존 qId 유지
+        qId: q.qId,
         qText: q.qText.trim(),
         qType: q.qType,
         isRequired: q.isRequired,
-        ...((q.qType === 'singleChoice' || q.qType === 'multipleChoice') && {
-          options: q.options.map(opt => ({
-            optId: opt.optId, // 기존 optId 유지
-            text: opt.text.trim(),
-            votes: opt.votes || 0 // 기존 votes 값 유지
-          }))
-        })
+        options: (q.qType === 'singleChoice' || q.qType === 'multipleChoice') && q.options
+          ? q.options.map(opt => ({
+              optId: opt.optId,
+              text: opt.text.trim(),
+              // votes는 백엔드에서 기존 값을 보존하거나, DTO에 포함시켜 전달 후 처리 필요
+            }))
+          : undefined,
       })),
-      // totalRespondents는 설문 응답 시 변경되므로, 수정 시에는 보통 변경하지 않음.
-      // 필요하다면 updatedAt 필드를 추가할 수 있음 (서버에서 처리)
     };
 
     try {
-      await axios.put(`http://localhost:8888/api/surveys/${surveyId}`, updatedSurveyData);
+      await axios.put(`http://localhost:8888/api/surveys/${surveyId}`, surveyUpdateData, {
+        headers: {
+          'X-USER-ID': user.id
+        }
+      });
       toast.success('설문이 성공적으로 수정되었습니다!');
       navigate(`/surveys/${surveyId}`);
     } catch (error) {
-      toast.error('설문 수정 중 오류가 발생했습니다.');
-      console.error("Failed to update survey:", error);
+      console.error("설문 수정 중 오류 발생:", error);
+       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        toast.error('설문 수정 권한이 없습니다.');
+      } else {
+        toast.error(error.response?.data?.message || '설문 수정 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
     return <PageWrapper><PageInner><Container><p>설문 정보를 불러오는 중...</p></Container></PageInner></PageWrapper>;
   }
-  
-  if (!originalSurvey) {
-    return <PageWrapper><PageInner><Container><p>설문 정보를 표시할 수 없습니다. 권한이 없거나 잘못된 접근일 수 있습니다.</p></Container></PageInner></PageWrapper>;
+  if (!user || user.id !== originalAuthorId) {
+    return <PageWrapper><PageInner><Container><p>접근 권한이 없습니다.</p></Container></PageInner></PageWrapper>;
   }
 
   return (
@@ -328,53 +328,57 @@ const SurveyEdit = () => {
             <SurveyFormTitle>설문 수정</SurveyFormTitle>
             <SurveyTitleInput
               type="text"
-              placeholder="설문지 제목을 입력하세요"
               value={surveyTitle}
               onChange={(e) => setSurveyTitle(e.target.value)}
               required
+              disabled={isSubmitting}
             />
             <SurveyDescriptionTextarea
-              placeholder="설문지 설명을 입력하세요 (선택 사항)"
               value={surveyDescription}
               onChange={(e) => setSurveyDescription(e.target.value)}
+              disabled={isSubmitting}
             />
 
             {questions.map((q, qIndex) => (
-              <QuestionCard key={q.qId || qIndex}> {/* qId가 없을 수도 있는 새 질문 고려 */}
+              <QuestionCard key={q.qId || `edit-q-${qIndex}`}> {/* 키 값 안정화 */}
                 <QuestionHeader>
                   <strong>질문 {qIndex + 1}</strong>
                   {questions.length > 1 && (
-                     <RemoveButton type="button" onClick={() => handleRemoveQuestion(qIndex)}>질문 삭제</RemoveButton>
+                     <RemoveButton type="button" onClick={() => handleRemoveQuestion(qIndex)} disabled={isSubmitting}>질문 삭제</RemoveButton>
                   )}
                 </QuestionHeader>
                 <QuestionTextarea
-                  placeholder="질문 내용을 입력하세요"
                   value={q.qText}
                   onChange={(e) => handleQuestionChange(qIndex, 'qText', e.target.value)}
                   required
+                  disabled={isSubmitting}
                 />
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
                   <div>
-                    <label htmlFor={`qType-${q.qId || qIndex}`} style={{ marginRight: '10px', fontSize: '0.9rem' }}>질문 유형:</label>
+                    <label htmlFor={`qType-edit-${q.qId || qIndex}`} style={{ marginRight: '10px', fontSize: '0.9rem' }}>질문 유형:</label>
                     <QuestionTypeSelect
-                      id={`qType-${q.qId || qIndex}`}
+                      id={`qType-edit-${q.qId || qIndex}`}
                       value={q.qType}
                       onChange={(e) => handleQuestionChange(qIndex, 'qType', e.target.value)}
+                      disabled={isSubmitting}
                     >
                       <option value="singleChoice">객관식 (단일 선택)</option>
                       <option value="multipleChoice">객관식 (다중 선택)</option>
-                      <option value="textShort">주관식 (단답형)</option>
-                      <option value="textLong">주관식 (장문형)</option>
+                       {/* 주관식 유형은 현재 백엔드 DTO에서 options를 undefined로 처리하므로,
+                           선택 UI를 추가하려면 백엔드 SurveyDto.QuestionCreate의 options 처리도 수정 필요 */}
+                       {/* <option value="textShort">주관식 (단답형)</option> */}
+                       {/* <option value="textLong">주관식 (장문형)</option> */}
                     </QuestionTypeSelect>
                   </div>
                   <div>
                     <input
                       type="checkbox"
-                      id={`isRequired-${q.qId || qIndex}`}
+                      id={`isRequired-edit-${q.qId || qIndex}`}
                       checked={q.isRequired}
                       onChange={(e) => handleQuestionChange(qIndex, 'isRequired', e.target.checked)}
+                      disabled={isSubmitting}
                     />
-                    <label htmlFor={`isRequired-${q.qId || qIndex}`} style={{ marginLeft: '0.5rem', fontWeight:'normal', fontSize: '0.9rem' }}>필수 응답</label>
+                    <label htmlFor={`isRequired-edit-${q.qId || qIndex}`} style={{ marginLeft: '0.5rem', fontWeight:'normal', fontSize: '0.9rem' }}>필수 응답</label>
                   </div>
                 </div>
 
@@ -382,35 +386,36 @@ const SurveyEdit = () => {
                   <div>
                     <strong style={{fontSize: '0.9rem', display:'block', marginBottom:'0.5rem'}}>선택 옵션:</strong>
                     {q.options.map((opt, optIndex) => (
-                      <OptionInputGroup key={opt.optId || optIndex}> {/* optId가 없을 수도 있는 새 옵션 고려 */}
+                      <OptionInputGroup key={opt.optId || `edit-opt-${qIndex}-${optIndex}`}> {/* 키 값 안정화 */}
                         <Input
                           type="text"
-                          placeholder={`옵션 ${optIndex + 1}`}
                           value={opt.text}
                           onChange={(e) => handleOptionTextChange(qIndex, optIndex, e.target.value)}
                           required
+                          disabled={isSubmitting}
                         />
                         {q.options.length > 2 && (
-                          <RemoveButton type="button" onClick={() => handleRemoveOption(qIndex, optIndex)}>옵션 삭제</RemoveButton>
+                          <RemoveButton type="button" onClick={() => handleRemoveOption(qIndex, optIndex)} disabled={isSubmitting}>옵션 삭제</RemoveButton>
                         )}
                       </OptionInputGroup>
                     ))}
                     {q.options.length < 10 && (
-                       <AddButton type="button" onClick={() => handleAddOption(qIndex)}>옵션 추가</AddButton>
+                       <AddButton type="button" onClick={() => handleAddOption(qIndex)} disabled={isSubmitting}>옵션 추가</AddButton>
                     )}
                   </div>
                 )}
-                {/* 주관식 질문 유형에 대한 별도 UI는 생성 시와 동일하게 없음 (필요시 추가) */}
               </QuestionCard>
             ))}
 
             <div style={{textAlign: 'center', marginTop: '1rem' }}>
-              <AddButton type="button" onClick={handleAddQuestion} style={{marginBottom: '2rem'}}>질문 추가</AddButton>
+              <AddButton type="button" onClick={handleAddQuestion} style={{marginBottom: '2rem'}} disabled={isSubmitting}>질문 추가</AddButton>
             </div>
 
             <FormActions>
-              <PrimaryButton type="submit">수정 완료</PrimaryButton>
-              <DangerButton type="button" onClick={() => navigate(`/surveys/${surveyId}`)}>취소</DangerButton>
+              <DangerButton type="button" onClick={() => navigate(`/surveys/${surveyId}`)} disabled={isSubmitting}>취소</DangerButton>
+              <PrimaryButton type="submit" disabled={isSubmitting}>
+                {isSubmitting ? '수정 중...' : '수정 완료'}
+              </PrimaryButton>
             </FormActions>
           </form>
         </Container>

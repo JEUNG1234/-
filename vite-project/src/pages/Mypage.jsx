@@ -1,11 +1,11 @@
 // src/pages/Mypage.jsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import useUserStore from '../store/useUserStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
 // PageLayout 컴포넌트 import
@@ -16,6 +16,7 @@ import { Container, Input, PrimaryButton } from '../components/CommonStyles';
 const Title = styled.h2`
   margin-bottom: 1.5rem;
   text-align: center;
+  color: ${props => props.theme.colors.text};
 `;
 
 const Divider = styled.hr`
@@ -30,75 +31,167 @@ const PostList = styled.ul`
 `;
 
 const PostItem = styled.li`
-  background: #f8f9fa;
+  background: ${props => props.theme.colors.surfaceLight || '#f8f9fa'};
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
-  border-radius: 8px;
+  border-radius: ${props => props.theme.borderRadius.medium || '8px'};
+  box-shadow: ${props => props.theme.shadows.small};
+  
+  a {
+    color: ${props => props.theme.colors.primary || 'royalblue'};
+    text-decoration: none;
+    font-weight: bold;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 `;
 
 const PostTitle = styled.h4`
   margin: 0;
+  font-size: 1.1rem;
 `;
 
 const PostBody = styled.p`
   margin: 0.6rem 0 0.4rem;
+  font-size: 0.95rem;
+  color: ${props => props.theme.colors.textSecondary};
 `;
 
 const PostDate = styled.small`
   color: #888;
 `;
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  gap: 0.5rem;
+
+  button {
+    padding: 0.5rem 1rem;
+    border: 1px solid ${props => props.theme.colors.border || '#ccc'};
+    background-color: ${props => props.theme.colors.surface || '#fff'};
+    color: ${props => props.theme.colors.primary || 'royalblue'};
+    cursor: pointer;
+    border-radius: ${props => props.theme.borderRadius.small || '4px'};
+
+    &:disabled {
+      color: #aaa;
+      cursor: not-allowed;
+      background-color: #f0f0f0;
+    }
+    &:hover:not(:disabled) {
+      background-color: #e9ecef;
+    }
+  }
+  span {
+    padding: 0.5rem;
+    font-weight: bold;
+  }
+`;
+
+
 const Mypage = () => {
-  const { user, setUser } = useUserStore();
+  // const { user, setUser } = useUserStore(); // setUser 제거
+  const { user } = useUserStore(); // setUser 사용하지 않으므로 제거
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [userPosts, setUserPosts] = useState([]);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
+
+  const [userPostsPage, setUserPostsPage] = useState({
+    content: [],
+    currentPage: 0,
+    totalPage: 0,
+    totalCount: 0,
+    hasNext: false,
+    hasPrevious: false,
+  });
+  const [currentPostPageNumber, setCurrentPostPageNumber] = useState(0);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
 
   useEffect(() => {
     if (!user) {
-      toast.info('로그인이 필요합니다.');
+      toast.info('마이페이지를 보려면 로그인이 필요합니다.');
       navigate('/login');
-      return;
     }
-
-    setForm({
-      name: user.name,
-      email: user.email,
-      password: user.password, // 실제 애플리케이션에서는 비밀번호를 이렇게 직접 다루는 것은 보안상 좋지 않습니다.
-    });
-
-    fetchUserPosts();
   }, [user, navigate]);
 
-  const fetchUserPosts = async () => {
-    if (!user) return; // user가 없을 경우를 대비
+  const fetchUserPosts = useCallback(async (page) => {
+    if (!user || !user.name) return;
+    setIsLoadingPosts(true);
     try {
-      const res = await axios.get(`http://localhost:8888/api/boards?author=${user.name}`);
-      setUserPosts(res.data);
+      const res = await axios.get(`http://localhost:8888/api/boards?author=${encodeURIComponent(user.name)}&page=${page}&size=3&sort=createDate,desc`);
+      setUserPostsPage(res.data);
     } catch (error) {
-      toast.error('게시글을 불러오지 못했습니다.');
-      console.error(error);
+      toast.error('내가 쓴 글을 불러오지 못했습니다.');
+      console.error("Error fetching user posts:", error);
+    } finally {
+      setIsLoadingPosts(false);
     }
-  };
+  }, [user]);
 
-  const handleChange = (e) => {
+  useEffect(() => {
+    if (user) {
+      fetchUserPosts(currentPostPageNumber);
+    }
+  }, [user, fetchUserPosts, currentPostPageNumber]);
+
+
+  const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUpdate = async () => {
+  const handlePasswordUpdate = async () => {
+    if (!user || !user.id) {
+      toast.error('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+      return;
+    }
+    if (!passwordForm.currentPassword || !passwordForm.newPassword) {
+        toast.warn('현재 비밀번호와 새 비밀번호를 모두 입력해주세요.');
+        return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+        toast.warn('새 비밀번호는 최소 6자 이상이어야 합니다.');
+        return;
+    }
+
+    setIsUpdatingPassword(true);
     try {
-      await axios.put(`http://localhost:8888/api/members/${user.id}`, form);
-      toast.success('정보가 수정되었습니다.');
-      setUser({ ...user, ...form });
+      const updateData = {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      };
+      // 비밀번호 변경 API는 일반적으로 수정된 사용자 정보를 반환하지 않거나,
+      // 반환하더라도 비밀번호 필드는 제외된 형태로 반환합니다.
+      // 따라서 현재 userStore의 user 객체를 명시적으로 업데이트할 필요는 없습니다.
+      // (토큰을 재발급 받는다면 그때 user 정보가 갱신될 수 있습니다.)
+      await axios.put(`http://localhost:8888/api/members/${user.id}`, updateData, {
+        headers: {
+            'X-USER-ID': user.id
+        }
+      });
+      toast.success('비밀번호가 성공적으로 변경되었습니다.');
+      setPasswordForm({ currentPassword: '', newPassword: '' });
+      // setUser(updatedUserInfoFromResponse); // 백엔드에서 업데이트된 사용자 정보를 반환한다면 여기서 사용 가능
     } catch (error) {
-      toast.error('정보 수정 실패');
-      console.error(error);
+      console.error("Error updating password:", error);
+      toast.error(error.response?.data?.message || '비밀번호 변경 중 오류가 발생했습니다.');
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
-  if (!user) { // user가 없을 경우 로딩 상태나 리다이렉션 처리를 명시적으로 하는 것이 좋습니다.
-    return null; // 또는 <p>Loading...</p> 등
+  const handlePostPageChange = (newPageNumber) => {
+    setCurrentPostPageNumber(newPageNumber);
+  };
+
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -106,78 +199,108 @@ const Mypage = () => {
       <PageInner>
         <Container>
           <Title>내 정보</Title>
-
-          {/* 이름 입력 필드 */}
           <div style={{ marginBottom: '1rem' }}>
             <label htmlFor="name" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
               이름
             </label>
-            <Input // CommonStyles에서 가져온 Input 컴포넌트 사용
+            <Input
               id="name"
               name="name"
-              value={form.name}
-              readOnly 
-              onChange={handleChange}
-              placeholder="이름"
+              value={user.name}
+              readOnly
               style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
             />
           </div>
 
-          {/* 이메일 입력 필드 */}
           <div style={{ marginBottom: '1rem' }}>
             <label htmlFor="email" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
-              이메일
+              이메일 (ID)
             </label>
-            <Input // CommonStyles에서 가져온 Input 컴포넌트 사용
+            <Input
               id="email"
               name="email"
-              value={form.email}
-              onChange={handleChange} // 실제로는 이메일 변경을 허용하지 않을 수 있습니다.
-              placeholder="이메일"
-              readOnly // 이메일은 보통 수정 불가 처리
+              value={user.id}
+              readOnly
               style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
             />
           </div>
 
-          {/* 새 비밀번호 입력 필드 */}
+          <Divider />
+          <Title style={{fontSize: '1.5rem', textAlign: 'left', marginBottom: '1rem'}}>비밀번호 변경</Title>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="password" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
-              새 비밀번호
+            <label htmlFor="currentPassword" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+              현재 비밀번호
             </label>
-            <Input // CommonStyles에서 가져온 Input 컴포넌트 사용
-              id="password"
-              name="password"
+            <Input
+              id="currentPassword"
+              name="currentPassword"
               type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="새 비밀번호 (변경 시에만 입력)"
+              value={passwordForm.currentPassword}
+              onChange={handlePasswordChange}
+              placeholder="현재 사용 중인 비밀번호"
+              disabled={isUpdatingPassword}
             />
           </div>
-
-          <PrimaryButton onClick={handleUpdate} style={{ marginTop: '1rem' }}>
-            정보 수정
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="newPassword" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+              새 비밀번호
+            </label>
+            <Input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              value={passwordForm.newPassword}
+              onChange={handlePasswordChange}
+              placeholder="새로운 비밀번호 (최소 6자 이상)"
+              disabled={isUpdatingPassword}
+            />
+          </div>
+          <PrimaryButton onClick={handlePasswordUpdate} style={{ marginTop: '1rem' }} disabled={isUpdatingPassword}>
+            {isUpdatingPassword ? '변경 중...' : '비밀번호 변경'}
           </PrimaryButton>
 
           <Divider />
 
-          <Title>내가 쓴 글</Title>
-          <PostList>
-            {userPosts.length > 0 ? (
-              userPosts.map((item) => (
-                <PostItem key={item.id}>
-                  <PostTitle>{item.title}</PostTitle>
-                  <PostBody>{item.body}</PostBody>
-                  <PostDate>
-                    {item.createdAt && !isNaN(Date.parse(item.createdAt))
-                      ? format(new Date(item.createdAt), 'yyyy-MM-dd HH:mm')
-                      : '날짜 없음'}
-                  </PostDate>
-                </PostItem>
-              ))
+          <Title style={{textAlign: 'left'}}>내가 쓴 글 ({userPostsPage.totalCount})</Title>
+          {isLoadingPosts ? <p>게시글을 불러오는 중...</p> :
+            userPostsPage.content.length > 0 ? (
+              <PostList>
+                {userPostsPage.content.map((item) => (
+                  <PostItem key={item.id}>
+                    <PostTitle>
+                      <Link to={`/board/${item.id}`}>{item.title}</Link>
+                    </PostTitle>
+                    <PostBody>{item.body?.substring(0,100)}{item.body?.length > 100 && "..."}</PostBody>
+                    <PostDate>
+                      {item.createdAt && !isNaN(Date.parse(item.createdAt))
+                        ? format(new Date(item.createdAt), 'yyyy-MM-dd HH:mm')
+                        : '날짜 없음'}
+                      &nbsp;|&nbsp; 조회수: {item.viewCount}
+                    </PostDate>
+                  </PostItem>
+                ))}
+              </PostList>
             ) : (
               <p>작성한 글이 없습니다.</p>
-            )}
-          </PostList>
+            )
+          }
+          {userPostsPage.totalPage > 1 && (
+            <PaginationContainer>
+              <button
+                onClick={() => handlePostPageChange(currentPostPageNumber - 1)}
+                disabled={!userPostsPage.hasPrevious}
+              >
+                이전
+              </button>
+              <span>{userPostsPage.currentPage + 1} / {userPostsPage.totalPage}</span>
+              <button
+                onClick={() => handlePostPageChange(currentPostPageNumber + 1)}
+                disabled={!userPostsPage.hasNext}
+              >
+                다음
+              </button>
+            </PaginationContainer>
+          )}
         </Container>
       </PageInner>
     </PageWrapper>

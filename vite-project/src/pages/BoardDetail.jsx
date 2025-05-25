@@ -1,6 +1,6 @@
 // src/pages/BoardDetail.jsx
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom'; // Link 추가
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
@@ -17,6 +17,7 @@ import { PageWrapper, PageInner } from '../components/PageLayout';
 
 import styled from 'styled-components';
 
+// --- Styled Components (기존과 동일) ---
 const PostTitle = styled.h2`
   font-size: 1.8rem;
   color: ${props => props.theme.colors.text};
@@ -100,6 +101,7 @@ const CommentForm = styled.form`
   flex-direction: column;
   gap: 0.75rem;
 `;
+// --- Styled Components 끝 ---
 
 const BoardDetail = () => {
   const { id: postId } = useParams();
@@ -117,6 +119,8 @@ const BoardDetail = () => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isUpdatingComment, setIsUpdatingComment] = useState(null);
   const [isDeletingComment, setIsDeletingComment] = useState(null);
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
+
 
   const fetchPost = useCallback(async () => {
     setIsLoadingPost(true);
@@ -126,7 +130,11 @@ const BoardDetail = () => {
     } catch (err) {
       toast.error('게시글을 불러오지 못했습니다.');
       console.error("Failed to fetch post:", err);
-      navigate('/board');
+      if (err.response && err.response.status === 404) {
+        navigate('/404');
+      } else {
+        navigate('/board');
+      }
     } finally {
       setIsLoadingPost(false);
     }
@@ -135,13 +143,13 @@ const BoardDetail = () => {
   const fetchComments = useCallback(async () => {
     setIsLoadingComments(true);
     try {
-      const res = await axios.get(`http://localhost:8888/api/comments?postId=${postId}`);
-// 또는 백엔드 설계에 따라:
-// const res = await axios.get(`http://localhost:8888/api/boards/${postId}/comments`);
-      setComments(res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    } catch (err) { // 여기가 BoardDetail.jsx:145 (이전 오류 로그 기준)
+      // 댓글 목록 조회 API 경로 변경
+      const res = await axios.get(`http://localhost:8888/api/boards/${postId}/replies`);
+      // 백엔드에서 이미 정렬해서 오므로 클라이언트 정렬은 선택사항
+      setComments(res.data); // res.data가 List<ReplyDto.Response>라고 가정
+    } catch (err) {
       toast.error('댓글을 불러오지 못했습니다.');
-      console.error("Failed to fetch comments:", err); // AxiosError가 여기서 출력됨
+      console.error("Failed to fetch comments:", err);
     } finally {
       setIsLoadingComments(false);
     }
@@ -153,25 +161,42 @@ const BoardDetail = () => {
   }, [fetchPost, fetchComments]);
 
   const handleDeletePost = async () => {
-    if (!user || user.name !== post?.author) {
-        toast.error('삭제 권한이 없습니다.');
+    if (!user || !user.id) {
+        toast.error('삭제 권한이 없습니다. 로그인이 필요합니다.');
+        navigate('/login');
         return;
     }
+    if (user.id !== post?.authorId) {
+        toast.error('게시글 삭제 권한이 없습니다.');
+        return;
+    }
+
     if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+      setIsDeletingPost(true);
       try {
-        await axios.delete(`http://localhost:8888/api/boards/${postId}`);
+        await axios.delete(`http://localhost:8888/api/boards/${postId}`, {
+          headers: {
+            'X-USER-ID': user.id
+          }
+        });
         toast.success('게시글이 삭제되었습니다.');
         navigate('/board');
       } catch (error) {
-        toast.error('게시글 삭제 중 오류가 발생했습니다.');
         console.error("Failed to delete post:", error);
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            toast.error('게시글 삭제 권한이 없습니다.');
+        } else {
+            toast.error(error.response?.data?.message || '게시글 삭제 중 오류가 발생했습니다.');
+        }
+      } finally {
+        setIsDeletingPost(false);
       }
     }
   };
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (!user) {
+    if (!user || !user.id) {
       toast.warn('댓글을 작성하려면 로그인이 필요합니다.');
       navigate('/login', { state: { from: `/board/${postId}` } });
       return;
@@ -182,22 +207,28 @@ const BoardDetail = () => {
     }
 
     setIsSubmittingComment(true);
+    // 백엔드 ReplyDto.Create DTO에 맞게 content만 전송
+    const commentData = {
+      content: newComment.trim(),
+    };
+
     try {
-      const commentData = {
-        postId: postId, // postId를 문자열 그대로 사용 (db.json의 posts id가 문자열이므로)
-        author: user.name,
-        content: newComment.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      await axios.post('http://localhost:8888/api/comments', commentData);
-// 또는 백엔드 설계에 따라:
-// await axios.post(`http://localhost:8888/api/boards/${postId}/comments`, commentData);
+      // 댓글 생성 API 경로 및 헤더 추가
+      await axios.post(`http://localhost:8888/api/boards/${postId}/replies`, commentData, {
+        headers: {
+          'X-USER-ID': user.id
+        }
+      });
       setNewComment('');
       toast.success('댓글이 등록되었습니다.');
       fetchComments();
-    } catch (error) { // 여기가 BoardDetail.jsx:202 (이전 오류 로그 기준)
-      toast.error('댓글 등록 중 오류가 발생했습니다.');
-      console.error("Failed to submit comment:", error); // AxiosError가 여기서 출력됨
+    } catch (error) {
+      console.error("Failed to submit comment:", error);
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        toast.error('댓글 작성 권한이 없습니다. 다시 로그인해주세요.');
+      } else {
+        toast.error(error.response?.data?.message || '댓글 등록 중 오류가 발생했습니다.');
+      }
     } finally {
       setIsSubmittingComment(false);
     }
@@ -205,20 +236,29 @@ const BoardDetail = () => {
 
   const handleCommentDelete = async (commentId) => {
     const commentToDelete = comments.find(c => c.id === commentId);
-    if (!user || user.name !== commentToDelete?.author) {
-        toast.error('삭제 권한이 없습니다.');
+    if (!user || !user.id || user.id !== commentToDelete?.authorId) {
+        toast.error('댓글 삭제 권한이 없습니다.');
         return;
     }
 
     if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
       setIsDeletingComment(commentId);
       try {
-        await axios.delete(`http://localhost:8888/api/comments/${commentId}`);
+        // 댓글 삭제 API 경로 및 헤더 추가
+        await axios.delete(`http://localhost:8888/api/replies/${commentId}`, {
+          headers: {
+            'X-USER-ID': user.id
+          }
+        });
         toast.success('댓글이 삭제되었습니다.');
         fetchComments();
       } catch (error) {
-        toast.error('댓글 삭제 중 오류가 발생했습니다.');
         console.error("Failed to delete comment:", error);
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            toast.error('댓글 삭제 권한이 없습니다.');
+        } else {
+            toast.error(error.response?.data?.message ||'댓글 삭제 중 오류가 발생했습니다.');
+        }
       } finally {
         setIsDeletingComment(null);
       }
@@ -226,6 +266,10 @@ const BoardDetail = () => {
   };
 
   const handleEditStart = (comment) => {
+    if (!user || !user.id || user.id !== comment?.authorId) {
+        toast.error('댓글 수정 권한이 없습니다.');
+        return;
+    }
     setEditCommentId(comment.id);
     setEditContent(comment.content);
   };
@@ -243,20 +287,35 @@ const BoardDetail = () => {
     const originalComment = comments.find((c) => c.id === commentId);
     if (!originalComment) return;
 
+    if (!user || !user.id || user.id !== originalComment?.authorId) {
+        toast.error('댓글 수정 권한이 없습니다.');
+        return;
+    }
+
     setIsUpdatingComment(commentId);
+    // 백엔드 ReplyDto.Update DTO에 맞게 content만 전송
+    const updatedCommentData = {
+      content: editContent.trim(),
+    };
+
     try {
-      const updatedCommentData = {
-        ...originalComment,
-        content: editContent.trim(),
-      };
-      await axios.put(`http://localhost:8888/api/comments/${commentId}`, updatedCommentData);
+      // 댓글 수정 API 경로 및 헤더 추가
+      await axios.put(`http://localhost:8888/api/replies/${commentId}`, updatedCommentData, {
+        headers: {
+          'X-USER-ID': user.id
+        }
+      });
       toast.success('댓글이 수정되었습니다.');
       setEditCommentId(null);
       setEditContent('');
       fetchComments();
     } catch (error) {
-      toast.error('댓글 수정 중 오류가 발생했습니다.');
       console.error("Failed to update comment:", error);
+       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            toast.error('댓글 수정 권한이 없습니다.');
+        } else {
+            toast.error(error.response?.data?.message || '댓글 수정 중 오류가 발생했습니다.');
+        }
     } finally {
       setIsUpdatingComment(null);
     }
@@ -266,21 +325,33 @@ const BoardDetail = () => {
     return <PageWrapper><PageInner><Container><p>게시글을 불러오는 중...</p></Container></PageInner></PageWrapper>;
   }
 
+  const isAuthor = user && post && user.id === post.authorId;
+
+
   return (
     <PageWrapper>
       <PageInner>
         <Container>
           <PostTitle>{post.title}</PostTitle>
           <PostMeta>
-            <span>작성자: {post.author}</span>
+            <span>작성자: {post.authorName}</span>
             <span>작성일: {format(new Date(post.createdAt), 'yyyy-MM-dd HH:mm')}</span>
+            <span>조회수: {post.viewCount}</span>
           </PostMeta>
           <PostBody>{post.body}</PostBody>
 
-          {user?.name === post.author && (
+          {isAuthor && (
             <ActionGroup style={{ justifyContent: 'flex-end', marginBottom: '2rem' }}>
-              <PrimaryButton onClick={() => navigate(`/board/edit/${postId}`)} style={{backgroundColor: '#ffc107', color: '#212529'}}>수정</PrimaryButton>
-              <DangerButton onClick={handleDeletePost}>삭제</DangerButton>
+              <PrimaryButton
+                onClick={() => navigate(`/board/edit/${postId}`)}
+                style={{backgroundColor: '#ffc107', color: '#212529'}}
+                disabled={isDeletingPost || isSubmittingComment || !!isUpdatingComment || !!isDeletingComment}
+              >
+                수정
+              </PrimaryButton>
+              <DangerButton onClick={handleDeletePost} disabled={isDeletingPost || isSubmittingComment || !!isUpdatingComment || !!isDeletingComment}>
+                {isDeletingPost ? "삭제 중..." : "삭제"}
+              </DangerButton>
             </ActionGroup>
           )}
 
@@ -290,23 +361,22 @@ const BoardDetail = () => {
 
           <CommentSection>
             <CommentSectionTitle>댓글 ({comments.length})</CommentSectionTitle>
-            {user && (
+            {user ? (
               <CommentForm onSubmit={handleCommentSubmit}>
                 <Textarea
                   placeholder="따뜻한 댓글을 남겨주세요 :)"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   rows={3}
-                  disabled={isSubmittingComment}
+                  disabled={isSubmittingComment || isDeletingPost || !!isUpdatingComment || !!isDeletingComment}
                 />
-                <SuccessButton type="submit" disabled={isSubmittingComment} style={{alignSelf: 'flex-end'}}>
+                <SuccessButton type="submit" disabled={isSubmittingComment || isDeletingPost || !!isUpdatingComment || !!isDeletingComment} style={{alignSelf: 'flex-end'}}>
                   {isSubmittingComment ? '등록 중...' : '댓글 등록'}
                 </SuccessButton>
               </CommentForm>
-            )}
-            {!user && ( // 여기가 BoardDetail.jsx:313 (이전 오류 로그 기준)
+            ) : (
                 <p style={{fontSize: '0.9em', color: '#777', textAlign: 'center', padding: '1rem', background: '#f9f9f9', borderRadius: '4px'}}>
-                    댓글을 작성하려면 <Link to={`/login?from=/board/${postId}`} style={{color: 'royalblue', fontWeight: 'bold'}}>로그인</Link>해주세요.
+                    댓글을 작성하려면 <Link to={`/login?state=${encodeURIComponent(JSON.stringify({ from: `/board/${postId}` }))}`} style={{color: 'royalblue', fontWeight: 'bold'}}>로그인</Link>해주세요.
                 </p>
             )}
 
@@ -315,54 +385,57 @@ const BoardDetail = () => {
               <p>댓글을 불러오는 중...</p>
             ) : comments.length > 0 ? (
               <CommentList style={{marginTop: "2rem"}}>
-                {comments.map((c) => (
-                  <CommentItem key={c.id}>
-                    <CommentAuthor>{c.author}</CommentAuthor>
+                {comments.map((c) => {
+                  const isCommentAuthor = user && c.authorId === user.id;
+                  return (
+                    <CommentItem key={c.id}>
+                      <CommentAuthor>{c.authorName}</CommentAuthor>
 
-                    {editCommentId === c.id ? (
-                      <>
-                        <Textarea
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          rows={3}
-                          style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}
-                          disabled={isUpdatingComment === c.id}
-                        />
-                        <ActionGroup>
-                          <SuccessButton onClick={() => handleEditSave(c.id)} disabled={isUpdatingComment === c.id}>
-                            {isUpdatingComment === c.id ? '저장 중...' : '저장'}
-                          </SuccessButton>
-                          <DangerButton onClick={handleEditCancel} disabled={isUpdatingComment === c.id}>취소</DangerButton>
-                        </ActionGroup>
-                      </>
-                    ) : (
-                      <>
-                        <CommentContent>{c.content}</CommentContent>
-                        <CommentTime>
-                          {c.createdAt && !isNaN(Date.parse(c.createdAt))
-                            ? format(new Date(c.createdAt), 'yyyy-MM-dd HH:mm')
-                            : '날짜 정보 없음'}
-                        </CommentTime>
-                        {user?.name === c.author && (
+                      {editCommentId === c.id ? (
+                        <>
+                          <Textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            rows={3}
+                            style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}
+                            disabled={isUpdatingComment === c.id || isDeletingPost}
+                          />
                           <ActionGroup>
-                            <PrimaryButton
-                                onClick={() => handleEditStart(c)}
-                                disabled={isDeletingComment === c.id || !!isUpdatingComment} // 수정: 다른 댓글 수정 중에도 비활성화
-                            >
-                                수정
-                            </PrimaryButton>
-                            <DangerButton
-                                onClick={() => handleCommentDelete(c.id)}
-                                disabled={isDeletingComment === c.id || !!isUpdatingComment} // 수정: 다른 댓글 수정 중에도 비활성화
-                            >
-                                {isDeletingComment === c.id ? '삭제 중...' : '삭제'}
-                            </DangerButton>
+                            <SuccessButton onClick={() => handleEditSave(c.id)} disabled={isUpdatingComment === c.id || isDeletingPost}>
+                              {isUpdatingComment === c.id ? '저장 중...' : '저장'}
+                            </SuccessButton>
+                            <DangerButton onClick={handleEditCancel} disabled={isUpdatingComment === c.id || isDeletingPost}>취소</DangerButton>
                           </ActionGroup>
-                        )}
-                      </>
-                    )}
-                  </CommentItem>
-                ))}
+                        </>
+                      ) : (
+                        <>
+                          <CommentContent>{c.content}</CommentContent>
+                          <CommentTime>
+                            {c.createdAt && !isNaN(Date.parse(c.createdAt))
+                              ? format(new Date(c.createdAt), 'yyyy-MM-dd HH:mm')
+                              : '날짜 정보 없음'}
+                          </CommentTime>
+                          {isCommentAuthor && (
+                            <ActionGroup>
+                              <PrimaryButton
+                                  onClick={() => handleEditStart(c)}
+                                  disabled={isDeletingPost || isSubmittingComment || !!isUpdatingComment || !!isDeletingComment}
+                              >
+                                  수정
+                              </PrimaryButton>
+                              <DangerButton
+                                  onClick={() => handleCommentDelete(c.id)}
+                                  disabled={isDeletingPost || isSubmittingComment || !!isUpdatingComment || isDeletingComment === c.id}
+                              >
+                                  {isDeletingComment === c.id ? '삭제 중...' : '삭제'}
+                              </DangerButton>
+                            </ActionGroup>
+                          )}
+                        </>
+                      )}
+                    </CommentItem>
+                  );
+                })}
               </CommentList>
             ) : (
               <p style={{textAlign: 'center', color: '#888', marginTop: '2rem'}}>등록된 댓글이 없습니다. 첫 댓글을 작성해보세요!</p>

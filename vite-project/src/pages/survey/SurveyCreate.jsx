@@ -9,7 +9,6 @@ import useUserStore from '../../store/useUserStore';
 import { PageWrapper, PageInner } from '../../components/PageLayout';
 import { Container, Input, PrimaryButton, DangerButton } from '../../components/CommonStyles';
 
-// --- SurveyCreate 전용 Styled Components (이전 답변과 동일) ---
 const SurveyFormTitle = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
@@ -39,8 +38,8 @@ const SurveyDescriptionTextarea = styled.textarea`
 `;
 
 const QuestionCard = styled.div`
-  background: ${props => props.theme.colors.surface || '#f9f9f9'};
-  border: 1px solid #e0e0e0;
+  background: ${props => props.theme.colors.surfaceLight || '#f9f9f9'};
+  border: 1px solid ${props => props.theme.colors.borderLight || '#e0e0e0'};
   border-radius: ${props => props.theme.borderRadius.large || '8px'};
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -114,10 +113,9 @@ const FormActions = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid ${props => props.theme.colors.border || '#eee'};
   padding-top: 1.5rem;
 `;
-// --- 여기까지 Styled Components ---
 
 const SurveyCreate = () => {
   const navigate = useNavigate();
@@ -127,10 +125,11 @@ const SurveyCreate = () => {
   const [questions, setQuestions] = useState([
     { qId: uuidv4(), qText: '', qType: 'singleChoice', options: [{ optId: uuidv4(), text: '' }, { optId: uuidv4(), text: '' }], isRequired: false }
   ]);
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!user) {
     toast.info('설문지를 만들려면 로그인이 필요합니다.', { autoClose: 2000 });
-    navigate('/login');
+    navigate('/login', {replace: true});
     return null;
   }
 
@@ -212,13 +211,18 @@ const SurveyCreate = () => {
 
   const handleSubmitSurvey = async (e) => {
     e.preventDefault();
+    if (!user || !user.id) {
+        toast.error('사용자 정보를 찾을 수 없습니다. 다시 로그인 해주세요.');
+        navigate('/login');
+        return;
+    }
     if (!surveyTitle.trim()) {
       toast.warn('설문지 제목을 입력해주세요.');
       return;
     }
     for (const q of questions) {
         if (!q.qText.trim()) {
-            toast.warn('모든 질문의 내용을 입력해주세요.');
+            toast.warn(`질문 ${questions.indexOf(q) + 1}의 내용을 입력해주세요.`);
             return;
         }
         if ((q.qType === 'singleChoice' || q.qType === 'multipleChoice')) {
@@ -232,44 +236,43 @@ const SurveyCreate = () => {
             }
         }
     }
-
-    const newSurvey = {
+    setIsLoading(true);
+    const newSurveyData = {
       title: surveyTitle.trim(),
       description: surveyDescription.trim(),
-      author: user.name,
-      createdAt: new Date().toISOString(),
-      status: "published",
       questions: questions.map(q => ({
         qId: q.qId,
-        qText: q.qText,
+        qText: q.qText.trim(),
         qType: q.qType,
         isRequired: q.isRequired,
-        ...( (q.qType === 'singleChoice' || q.qType === 'multipleChoice') && {
-            options: q.options.map(opt => ({ optId: opt.optId, text: opt.text, votes: 0 }))
-          }
-        )
+        options: (q.qType === 'singleChoice' || q.qType === 'multipleChoice') && q.options
+          ? q.options.map(opt => ({ optId: opt.optId, text: opt.text.trim() }))
+          : undefined,
       })),
-      totalRespondents: 0
     };
 
     try {
-      const response = await axios.post('http://localhost:8888/api/surveys', newSurvey);
+      const response = await axios.post('http://localhost:8888/api/surveys', newSurveyData, {
+        headers: {
+          'X-USER-ID': user.id
+        }
+      });
       toast.success('새로운 설문지가 생성되었습니다!');
-      console.log('New survey created:', response.data);
-
-      // !!! 여기가 수정된 부분입니다 !!!
-      // SurveyDetail 페이지가 준비되면 아래 주석을 해제하고, 위 navigate('/')는 주석 처리합니다.
-      // if (response.data && response.data.id) {
-      //   navigate(`/surveys/${response.data.id}`);
-      // } else {
-      //   toast.warn('생성된 설문 ID를 찾을 수 없어 홈으로 이동합니다.');
-      //   navigate('/');
-      // }
-      navigate('/'); // SurveyDetail.jsx가 준비될 때까지 임시로 홈으로 이동
-
+      if (response.data && response.data.id) {
+        navigate(`/surveys/${response.data.id}`);
+      } else {
+        toast.warn('생성된 설문 ID를 찾을 수 없어 목록으로 이동합니다.');
+        navigate('/surveys');
+      }
     } catch (error) {
-      toast.error('설문지 생성 중 오류가 발생했습니다.');
-      console.error("Failed to create survey:", error);
+      console.error("설문지 생성 중 오류 발생:", error);
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        toast.error('설문 생성 권한이 없습니다.');
+      } else {
+        toast.error(error.response?.data?.message || '설문지 생성 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -285,11 +288,13 @@ const SurveyCreate = () => {
               value={surveyTitle}
               onChange={(e) => setSurveyTitle(e.target.value)}
               required
+              disabled={isLoading}
             />
             <SurveyDescriptionTextarea
               placeholder="설문지 설명을 입력하세요 (선택 사항)"
               value={surveyDescription}
               onChange={(e) => setSurveyDescription(e.target.value)}
+              disabled={isLoading}
             />
 
             {questions.map((q, qIndex) => (
@@ -297,7 +302,7 @@ const SurveyCreate = () => {
                 <QuestionHeader>
                   <strong>질문 {qIndex + 1}</strong>
                   {questions.length > 1 && (
-                     <RemoveButton type="button" onClick={() => handleRemoveQuestion(qIndex)}>질문 삭제</RemoveButton>
+                     <RemoveButton type="button" onClick={() => handleRemoveQuestion(qIndex)} disabled={isLoading}>질문 삭제</RemoveButton>
                   )}
                 </QuestionHeader>
                 <QuestionTextarea
@@ -305,6 +310,7 @@ const SurveyCreate = () => {
                   value={q.qText}
                   onChange={(e) => handleQuestionTextChange(qIndex, e.target.value)}
                   required
+                  disabled={isLoading}
                 />
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
                   <div>
@@ -313,9 +319,12 @@ const SurveyCreate = () => {
                       id={`qType-${q.qId}`}
                       value={q.qType}
                       onChange={(e) => handleQuestionTypeChange(qIndex, e.target.value)}
+                      disabled={isLoading}
                     >
                       <option value="singleChoice">객관식 (단일 선택)</option>
                       <option value="multipleChoice">객관식 (다중 선택)</option>
+                      {/* <option value="textShort">주관식 (단답형)</option> */}
+                      {/* <option value="textLong">주관식 (장문형)</option> */}
                     </QuestionTypeSelect>
                   </div>
                   <div>
@@ -324,6 +333,7 @@ const SurveyCreate = () => {
                       id={`isRequired-${q.qId}`}
                       checked={q.isRequired}
                       onChange={(e) => handleQuestionRequiredChange(qIndex, e.target.checked)}
+                      disabled={isLoading}
                     />
                     <label htmlFor={`isRequired-${q.qId}`} style={{ marginLeft: '0.5rem', fontWeight:'normal', fontSize: '0.9rem' }}>필수 응답</label>
                   </div>
@@ -340,14 +350,15 @@ const SurveyCreate = () => {
                           value={opt.text}
                           onChange={(e) => handleOptionTextChange(qIndex, optIndex, e.target.value)}
                           required={q.qType === 'singleChoice' || q.qType === 'multipleChoice'}
+                          disabled={isLoading}
                         />
                         {q.options.length > 2 && (
-                          <RemoveButton type="button" onClick={() => handleRemoveOption(qIndex, optIndex)}>옵션 삭제</RemoveButton>
+                          <RemoveButton type="button" onClick={() => handleRemoveOption(qIndex, optIndex)} disabled={isLoading}>옵션 삭제</RemoveButton>
                         )}
                       </OptionInputGroup>
                     ))}
                     {q.options.length < 10 && (
-                       <AddButton type="button" onClick={() => handleAddOption(qIndex)}>옵션 추가</AddButton>
+                       <AddButton type="button" onClick={() => handleAddOption(qIndex)} disabled={isLoading}>옵션 추가</AddButton>
                     )}
                   </div>
                 )}
@@ -355,12 +366,14 @@ const SurveyCreate = () => {
             ))}
 
             <div style={{textAlign: 'center', marginTop: '1rem' }}>
-              <AddButton type="button" onClick={handleAddQuestion} style={{marginBottom: '2rem'}}>질문 추가</AddButton>
+              <AddButton type="button" onClick={handleAddQuestion} style={{marginBottom: '2rem'}} disabled={isLoading}>질문 추가</AddButton>
             </div>
 
             <FormActions>
-              <PrimaryButton type="submit">설문지 생성</PrimaryButton>
-              <DangerButton type="button" onClick={() => navigate('/')}>취소</DangerButton>
+              <DangerButton type="button" onClick={() => navigate('/surveys')} disabled={isLoading}>취소</DangerButton>
+              <PrimaryButton type="submit" disabled={isLoading}>
+                {isLoading ? '생성 중...' : '설문지 생성'}
+              </PrimaryButton>
             </FormActions>
           </form>
         </Container>

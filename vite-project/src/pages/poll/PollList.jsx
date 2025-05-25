@@ -1,30 +1,31 @@
 // src/pages/poll/PollList.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { toast } from 'react-toastify'; // toast import 추가
+import { toast } from 'react-toastify';
+import { format } from 'date-fns';
+
 import { PageWrapper, PageInner } from '../../components/PageLayout';
 import { Container, PrimaryButton } from '../../components/CommonStyles';
 import useUserStore from '../../store/useUserStore';
 
-// --- Styled Components ---
 const PollItem = styled.li`
-  background: #fff;
-  border: 1px solid #eee;
+  background: ${props => props.theme.colors.surface || '#fff'};
+  border: 1px solid ${props => props.theme.colors.borderLight || '#eee'};
   padding: 1rem 1.5rem;
   margin-bottom: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: ${props => props.theme.borderRadius.large || '8px'};
+  box-shadow: ${props => props.theme.shadows.small || '0 2px 4px rgba(0, 0, 0, 0.05)'};
   transition: box-shadow 0.2s ease-in-out;
 
   &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: ${props => props.theme.shadows.medium || '0 4px 8px rgba(0, 0, 0, 0.1)'};
   }
 
   a {
     font-size: 1.2rem;
-    color: #337ab7;
+    color: ${props => props.theme.colors.primary || '#337ab7'};
     font-weight: bold;
     text-decoration: none;
     &:hover {
@@ -35,7 +36,8 @@ const PollItem = styled.li`
   small {
     display: block;
     margin-top: 0.5rem;
-    color: #777;
+    color: ${props => props.theme.colors.textSecondary || '#777'};
+    font-size: 0.85rem;
   }
 `;
 
@@ -48,63 +50,114 @@ const HeaderGroup = styled.div`
 
 const MainTitle = styled.h2`
   font-size: 2rem;
-  color: #222;
+  color: ${props => props.theme.colors.text || '#222'};
   text-align: center;
   margin-bottom: 2.5rem;
 `;
 
 const SectionTitle = styled.h3`
   font-size: 1.6rem;
-  color: #333;
+  color: ${props => props.theme.colors.text || '#333'};
   margin-top: 2rem;
   margin-bottom: 1rem;
-  border-bottom: 2px solid #eee;
   padding-bottom: 0.5rem;
+  border-bottom: 2px solid ${props => props.theme.colors.borderLight || '#eee'};
 `;
 
 const HotPollItem = styled(PollItem)`
-  border-left: 5px solid #ffc107;
-  background-color: #fffaf0;
-
-  &:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  }
+  border-left: 5px solid ${props => props.theme.colors.primary || '#ffc107'};
+  background-color: ${props => props.theme.colors.surfaceLight || '#fffef5'};
 `;
 
 const NoPollsMessage = styled.p`
-  color: #777;
+  color: ${props => props.theme.colors.textSecondary || '#777'};
   text-align: center;
   padding: 2rem 0;
+  font-style: italic;
 `;
-// --- 여기까지 Styled Components ---
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  gap: 0.5rem;
+
+  button {
+    padding: 0.5rem 1rem;
+    border: 1px solid ${props => props.theme.colors.border || '#ccc'};
+    background-color: ${props => props.theme.colors.surface || '#fff'};
+    color: ${props => props.theme.colors.primary || 'royalblue'};
+    cursor: pointer;
+    border-radius: ${props => props.theme.borderRadius.small || '4px'};
+
+    &:disabled {
+      color: #aaa;
+      cursor: not-allowed;
+      background-color: #f0f0f0;
+    }
+    &:hover:not(:disabled) {
+      background-color: #e9ecef;
+    }
+  }
+  span {
+    padding: 0.5rem;
+    font-weight: bold;
+  }
+`;
 
 const PollList = () => {
-  const [allPolls, setAllPolls] = useState([]);
-  const [hotPolls, setHotPolls] = useState([]);
   const { user } = useUserStore();
+  const [hotPollsPage, setHotPollsPage] = useState({ content: [] });
+  const [allPollsPage, setAllPollsPage] = useState({
+    content: [],
+    currentPage: 0,
+    totalPage: 0,
+    hasNext: false,
+    hasPrevious: false,
+  });
+  const [currentAllPollsPageNumber, setCurrentAllPollsPageNumber] = useState(0);
+  const [isLoadingHot, setIsLoadingHot] = useState(true);
+  const [isLoadingAll, setIsLoadingAll] = useState(true);
 
-  const NUMBER_OF_HOT_POLLS = 3;
+  const fetchHotPolls = useCallback(async () => {
+    setIsLoadingHot(true);
+    try {
+      const res = await axios.get(`http://localhost:8888/api/polls?hot=true`);
+      setHotPollsPage(res.data); // 백엔드는 PageResponse<PollDto.Response> 반환
+    } catch (error) {
+      console.error("Failed to fetch hot polls:", error);
+      toast.error("HOT 투표 목록을 불러오는데 실패했습니다.");
+    } finally {
+      setIsLoadingHot(false);
+    }
+  }, []);
+
+  const fetchAllPolls = useCallback(async (page) => {
+    setIsLoadingAll(true);
+    try {
+      const res = await axios.get(`http://localhost:8888/api/polls?page=${page}&size=5&sort=createdAt,desc`);
+      setAllPollsPage(res.data);
+    } catch (error) {
+      console.error("Failed to fetch all polls:", error);
+      toast.error("전체 투표 목록을 불러오는데 실패했습니다.");
+    } finally {
+      setIsLoadingAll(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchPolls = async () => {
-      try {
-        const res = await axios.get('http://localhost:8888/api/polls');
-        const pollsData = res.data;
+    fetchHotPolls();
+  }, [fetchHotPolls]);
 
-        const sortedAllPolls = [...pollsData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setAllPolls(sortedAllPolls);
+  useEffect(() => {
+    fetchAllPolls(currentAllPollsPageNumber);
+  }, [fetchAllPolls, currentAllPollsPageNumber]);
 
-        const sortedByVotes = [...pollsData].sort((a, b) => b.totalVotes - a.totalVotes);
-        setHotPolls(sortedByVotes.slice(0, NUMBER_OF_HOT_POLLS));
 
-      } catch (error) {
-        console.error("Failed to fetch polls:", error);
-        toast.error("투표 목록을 불러오는데 실패했습니다."); // toast 사용
-      }
-    };
-    fetchPolls();
-  }, []);
+  const handleAllPollsPageChange = (newPageNumber) => {
+    setCurrentAllPollsPageNumber(newPageNumber);
+  };
 
   return (
     <PageWrapper>
@@ -112,17 +165,17 @@ const PollList = () => {
         <Container>
           <MainTitle>투표 광장</MainTitle>
 
-          {hotPolls.length > 0 && (
+          {!isLoadingHot && hotPollsPage.content && hotPollsPage.content.length > 0 && (
             <section>
               <HeaderGroup>
-                <SectionTitle>지금 HOT한 투표!</SectionTitle>
+                <SectionTitle>🔥 지금 HOT한 투표!</SectionTitle>
               </HeaderGroup>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                {hotPolls.map((poll) => (
+                {hotPollsPage.content.map((poll) => (
                   <HotPollItem key={`hot-${poll.id}`}>
                     <Link to={`/polls/${poll.id}`}>{poll.title}</Link>
                     <small>
-                      작성자: {poll.author} · 총 {poll.totalVotes}표
+                      작성자: {poll.authorName} · 총 {poll.totalVotes || 0}표 · 생성일: {format(new Date(poll.createdAt), 'yyyy-MM-dd')}
                     </small>
                   </HotPollItem>
                 ))}
@@ -131,7 +184,7 @@ const PollList = () => {
           )}
 
           <section>
-            <HeaderGroup style={{ marginTop: hotPolls.length > 0 ? '3rem' : '0' }}>
+            <HeaderGroup style={{ marginTop: (hotPollsPage.content && hotPollsPage.content.length > 0) ? '3rem' : '0' }}>
               <SectionTitle>전체 투표 목록</SectionTitle>
               {user && (
                 <PrimaryButton as={Link} to="/polls/new">
@@ -140,21 +193,39 @@ const PollList = () => {
               )}
             </HeaderGroup>
 
-            {allPolls.length === 0 && hotPolls.length === 0 ? ( // HOT 투표도 없고 전체 투표도 없을 때만
-              <NoPollsMessage>진행중인 투표가 없습니다. 첫 번째 투표를 만들어보세요!</NoPollsMessage>
-            ) : allPolls.length === 0 && hotPolls.length > 0 ? ( // HOT 투표는 있지만, 추가적인 전체 투표는 없을 때 (사실상 이 경우는 드물거나, allPolls가 hotPolls를 포함하므로 다르게 처리 가능)
-              <NoPollsMessage>더 많은 투표를 기다리고 있습니다!</NoPollsMessage>
+            {isLoadingAll ? <p>투표 목록을 불러오는 중...</p> :
+              allPollsPage.content && allPollsPage.content.length > 0 ? (
+              <>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  {allPollsPage.content.map((poll) => (
+                    <PollItem key={poll.id}>
+                      <Link to={`/polls/${poll.id}`}>{poll.title}</Link>
+                      <small>
+                        작성자: {poll.authorName} · 총 {poll.totalVotes || 0}표 · 생성일: {format(new Date(poll.createdAt), 'yyyy-MM-dd HH:mm')}
+                      </small>
+                    </PollItem>
+                  ))}
+                </ul>
+                {allPollsPage.totalPage > 1 && (
+                  <PaginationContainer>
+                    <button
+                      onClick={() => handleAllPollsPageChange(currentAllPollsPageNumber - 1)}
+                      disabled={!allPollsPage.hasPrevious}
+                    >
+                      이전
+                    </button>
+                    <span>{allPollsPage.currentPage + 1} / {allPollsPage.totalPage}</span>
+                    <button
+                      onClick={() => handleAllPollsPageChange(currentAllPollsPageNumber + 1)}
+                      disabled={!allPollsPage.hasNext}
+                    >
+                      다음
+                    </button>
+                  </PaginationContainer>
+                )}
+              </>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {allPolls.map((poll) => (
-                  <PollItem key={poll.id}>
-                    <Link to={`/polls/${poll.id}`}>{poll.title}</Link>
-                    <small>
-                      작성자: {poll.author} · 총 {poll.totalVotes}표
-                    </small>
-                  </PollItem>
-                ))}
-              </ul>
+              <NoPollsMessage>진행중인 투표가 없습니다.</NoPollsMessage>
             )}
           </section>
         </Container>
