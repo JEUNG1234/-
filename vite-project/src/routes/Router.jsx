@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 
 // 페이지 컴포넌트들
 import Login from '../pages/Login';
-import Register from '../pages/Register';
+import Register from '../pages/Register.jsx';
 import Mypage from '../pages/Mypage';
 import NotFound from '../pages/NotFound';
 
