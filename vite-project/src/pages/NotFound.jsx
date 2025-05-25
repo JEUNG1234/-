@@ -1,52 +1,55 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Link } from 'react-router-dom';
-import { Container, PrimaryButton } from '../components/CommonStyles'; // 수정: Button -> PrimaryButton
+import React from 'react'
+import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 
-const Wrapper = styled.div`
+const Mainpage = styled.div`
+  background: linear-gradient(to bottom right, #ffffff, #7d7d7d);
+  width: 100%;
+  min-height: 100vh;
+  padding: 4rem 2rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background-color: #fefefe;
   text-align: center;
-  padding: 2rem;
-`;
+  justify-content: center;
+`
 
 const Title = styled.h1`
   font-size: 4rem;
-  color: #ff4d4f;
+  color: #2d3436;
   margin-bottom: 1rem;
-`;
+`
 
 const Message = styled.p`
-  font-size: 1.25rem;
-  color: #333;
+  font-size: 1.5rem;
+  color: #636e72;
   margin-bottom: 2rem;
-`;
+`
 
-const HomeLink = styled(Link)`
+const StyledLink = styled(Link)`
+  background-color: white;
   padding: 0.75rem 1.5rem;
-  background-color: #0070f3;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
+  color: #000000;
   font-weight: bold;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 
   &:hover {
-    background-color: #005ac1;
+    background-color: #e7e7e7;
+    color: #000000;
   }
-`;
+`
 
 const NotFound = () => {
   return (
-    <Wrapper>
-      <Title>404</Title>
-      <Message>페이지를 찾을 수 없습니다.</Message>
-      <HomeLink to="/">홈으로 돌아가기</HomeLink>
-    </Wrapper>
-  );
-};
+    <Mainpage>
+      <Title>404 ERROR</Title>
+      <Message>페이지를 찾을 수 없습니다</Message>
+      <StyledLink to="/">홈으로 돌아가기</StyledLink>
+    </Mainpage>
+  )
+}
 
-export default NotFound;
+export default NotFound
